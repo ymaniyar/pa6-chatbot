@@ -137,6 +137,7 @@ class Chatbot:
         return text
 
     def extract_titles(self, preprocessed_input):
+        # TODO: SOFIA
         """Extract potential movie titles from a line of pre-processed text.
 
         Given an input text which has been pre-processed with preprocess(),
@@ -161,6 +162,7 @@ class Chatbot:
         return []
 
     def find_movies_by_title(self, title):
+        # TODO: SOFIA
         """ Given a movie title, return a list of indices of matching movies.
 
         - If no movies are found that match the given title, return an empty
@@ -181,6 +183,7 @@ class Chatbot:
         return []
 
     def extract_sentiment(self, preprocessed_input):
+        # TODO: ADONIS
         """Extract a sentiment rating from a line of pre-processed text.
 
         You should return -1 if the sentiment of the text is negative, 0 if the
@@ -307,7 +310,7 @@ class Chatbot:
 
         # The starter code returns a new matrix shaped like ratings but full of
         # zeros.
-        
+
         binarized_ratings = np.zeros_like(ratings)
         binarized_ratings[ratings < threshold] = -1
         binarized_ratings[ratings > threshold] = 1
@@ -331,13 +334,14 @@ class Chatbot:
         ########################################################################
         # TODO: Compute cosine similarity between the two vectors.             #
         ########################################################################
-        similarity = 0
+        similarity = np.dot(u, v)
         ########################################################################
         #                          END OF YOUR CODE                            #
         ########################################################################
         return similarity
 
     def recommend(self, user_ratings, ratings_matrix, k=10, creative=False):
+        # TODO: YASH
         """Generate a list of indices of movies to recommend using collaborative
          filtering.
 
