@@ -138,6 +138,8 @@ class Chatbot:
 
     def extract_titles(self, preprocessed_input):
         # TODO: SOFIA
+        # check check
+        # working on this
         """Extract potential movie titles from a line of pre-processed text.
 
         Given an input text which has been pre-processed with preprocess(),
