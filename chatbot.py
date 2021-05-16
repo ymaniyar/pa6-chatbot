@@ -24,10 +24,6 @@ class Chatbot:
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
 
-        ########################################################################
-        # TODO: Binarize the movie ratings matrix.                             #
-        ########################################################################
-
         # Binarize the movie ratings before storing the binarized matrix.
         self.ratings = self.binarize(ratings)
         ########################################################################
@@ -137,7 +133,6 @@ class Chatbot:
         return text
 
     def extract_titles(self, preprocessed_input):
-        # TODO: SOFIA
         """
         Extract potential movie titles from a line of pre-processed text.
 
@@ -321,11 +316,6 @@ class Chatbot:
 
         :returns: a binarized version of the movie-rating matrix
         """
-        ########################################################################
-        # TODO: Binarize the supplied ratings matrix.                          #
-        #                                                                      #
-        # WARNING: Do not use self.ratings directly in this function.          #
-        ########################################################################
 
         # The starter code returns a new matrix shaped like ratings but full of
         # zeros.
@@ -345,17 +335,14 @@ class Chatbot:
 
         You may assume that the two arguments have the same shape.
 
-        :param u: one vector, as a 1D numpy array
-        :param v: another vector, as a 1D numpy array
+        :param u: one vector, as a numpy array or 
+        :param v: another vector, as a numpy array
 
         :returns: the cosine similarity between the two vectors
+        if 1D vectors given, returns scalar cosine similarity between arrays
+        if matrices P and Q given, returns cosine similarity matrix S 
+            where S[i, j] is cosine similarity between ith row of P and jth row of Q
         """
-        ########################################################################
-        # TODO: Compute cosine similarity between the two vectors.             #
-        ########################################################################
-        # if 1D vectors given, returns scalar cosine similarity between arrays
-        # if matrices P and Q given, returns cosine similarity matrix S 
-        #   where S[i, j] is cosine similarity between ith row of P and jth row of Q
 
         norm_u = np.linalg.norm(u, axis=-1, keepdims=True)
         norm_v = np.linalg.norm(v, axis=0, keepdims=True)
@@ -375,7 +362,6 @@ class Chatbot:
         return similarity
 
     def recommend(self, user_ratings, ratings_matrix, k=10, creative=False):
-        # TODO: YASH
         """Generate a list of indices of movies to recommend using collaborative
          filtering.
 
@@ -399,7 +385,7 @@ class Chatbot:
         """
 
         ########################################################################
-        # TODO: Implement a recommendation function that takes a vector        #
+        # Implement a recommendation function that takes a vector              #
         # user_ratings and matrix ratings_matrix and outputs a list of movies  #
         # recommended by the chatbot.                                          #
         #                                                                      #
