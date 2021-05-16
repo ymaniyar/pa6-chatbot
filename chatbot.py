@@ -3,7 +3,7 @@
 # Original Python code by Ignacio Cases (@cases)
 ######################################################################
 import util
-
+import re
 import numpy as np
 
 
@@ -138,7 +138,8 @@ class Chatbot:
 
     def extract_titles(self, preprocessed_input):
         # TODO: SOFIA
-        """Extract potential movie titles from a line of pre-processed text.
+        """
+        Extract potential movie titles from a line of pre-processed text.
 
         Given an input text which has been pre-processed with preprocess(),
         this method should return a list of movie titles that are potentially
@@ -153,16 +154,20 @@ class Chatbot:
         Example:
           potential_titles = chatbot.extract_titles(chatbot.preprocess(
                                             'I liked "The Notebook" a lot.'))
-          print(potential_titles) // prints ["The Notebook"]
+          print(potential_titles) // prints ["The Notebook"]s
 
         :param preprocessed_input: a user-supplied line of text that has been
         pre-processed with preprocess()
         :returns: list of movie titles that are potentially in the text
         """
-        return []
+
+
+        ##Question mark makes expression lazy rather than greedy (stops as soon as it finds something).
+        matches=re.findall(r'\"(.+?)\"',preprocessed_input)
+        return matches
 
     def find_movies_by_title(self, title):
-        # TODO: SOFIA
+
         """ Given a movie title, return a list of indices of matching movies.
 
         - If no movies are found that match the given title, return an empty
@@ -180,7 +185,21 @@ class Chatbot:
         :param title: a string containing a movie title
         :returns: a list of indices of matching movies
         """
-        return []
+        articles = ['a','an','the']
+        check = title.split(" ")[len(title.split(" "))-1]
+        year = re.match('(\(\d{4}\))',check).group(0)
+        if year:
+            title = title.split(" " + year)[0]
+        else:
+            year = ""
+        if len(title.split(" ")) > 1 and title.split(" ")[0].lower() in articles:
+            title = title.split(" ",1)[1] + ", " + title.split(" ")[0]
+        title = title + " " + year
+        if year == "":
+            indices = [i for i, x in enumerate(self.titles) if re.split(r'(\(\d{4}\))',x[0])[0] == title]
+        else:
+            indices = [i for i, x in enumerate(self.titles) if x[0] == title]
+        return indices
 
     def extract_sentiment(self, preprocessed_input):
         # TODO: ADONIS
