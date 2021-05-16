@@ -133,6 +133,7 @@ class Chatbot:
         return text
 
     def extract_titles(self, preprocessed_input):
+        # SOFIA
         """
         Extract potential movie titles from a line of pre-processed text.
 
@@ -162,7 +163,7 @@ class Chatbot:
         return matches
 
     def find_movies_by_title(self, title):
-
+        # SOFIA
         """ Given a movie title, return a list of indices of matching movies.
 
         - If no movies are found that match the given title, return an empty
@@ -339,6 +340,7 @@ class Chatbot:
         :param v: another vector, as a numpy array
 
         :returns: the cosine similarity between the two vectors
+    
         if 1D vectors given, returns scalar cosine similarity between arrays
         if matrices P and Q given, returns cosine similarity matrix S 
             where S[i, j] is cosine similarity between ith row of P and jth row of Q
@@ -362,6 +364,7 @@ class Chatbot:
         return similarity
 
     def recommend(self, user_ratings, ratings_matrix, k=10, creative=False):
+        # YASH
         """Generate a list of indices of movies to recommend using collaborative
          filtering.
 
