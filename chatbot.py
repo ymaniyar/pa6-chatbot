@@ -29,7 +29,7 @@ class Chatbot:
         ########################################################################
 
         # Binarize the movie ratings before storing the binarized matrix.
-        self.ratings = ratings
+        self.ratings = self.binarize(ratings)
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
@@ -312,7 +312,7 @@ class Chatbot:
         # zeros.
 
         binarized_ratings = np.zeros_like(ratings)
-        binarized_ratings[ratings < threshold] = -1
+        binarized_ratings[ratings <= threshold] = -1
         binarized_ratings[ratings > threshold] = 1
         binarized_ratings[ratings == 0] = 0
 
@@ -334,7 +334,22 @@ class Chatbot:
         ########################################################################
         # TODO: Compute cosine similarity between the two vectors.             #
         ########################################################################
-        similarity = np.dot(u, v)
+        # if 1D vectors given, returns scalar cosine similarity between arrays
+        # if matrices P and Q given, returns cosine similarity matrix S 
+        #   where S[i, j] is cosine similarity between ith row of P and jth row of Q
+
+        norm_u = np.linalg.norm(u, axis=-1, keepdims=True)
+        norm_v = np.linalg.norm(v, axis=0, keepdims=True)
+        denoms = np.dot(norm_u, norm_v)
+        
+        # avoid dividing by 0
+        if np.isscalar(denoms):
+            if denoms == 0:
+                denoms = 1
+        else:
+            denoms[denoms == 0] = 1
+
+        similarity = np.matmul(u, v, dtype=float)/denoms
         ########################################################################
         #                          END OF YOUR CODE                            #
         ########################################################################
@@ -379,7 +394,21 @@ class Chatbot:
 
         # Populate this list with k movie indices to recommend to the user.
         recommendations = []
-
+        
+        # similarity matrix of shape (num_movies, num_movies) where sims[i, j] 
+        # is cosine similarity between movies i and j
+        sims = self.similarity(ratings_matrix, ratings_matrix.T)
+        
+        # scores[i] = score for movie i, which is sum of user ratings weighted by similarity to movie i; 
+        # note that user ratings of 0 effectively do not contribute to score
+        scores = np.sum(np.multiply(sims, user_ratings), axis=-1)
+        
+        # we do not want to include movies that the user has already seen in final recommendations
+        scores[user_ratings != 0] = np.NINF
+        
+        # recs are our k highest scoring movies 
+        recommendations = list(np.argsort(-1*scores)[:k])
+        
         ########################################################################
         #                        END OF YOUR CODE                              #
         ########################################################################
