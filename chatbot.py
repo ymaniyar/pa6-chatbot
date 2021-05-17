@@ -235,7 +235,7 @@ class Chatbot:
 
         num_words = len(preprocessed_input.split())
         stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
-        scores = [sentiment[stem] if stem in sentiment else 0 for stem in stemmed_input]
+        scores = [self.sentiment[stem] if stem in self.sentiment else 0 for stem in stemmed_input]
         if not simple:
             for i in range(1, num_words):
                 if stemmed_input[i-1] in [self.p.stem('very'), self.p.stem('really')]:
@@ -246,7 +246,7 @@ class Chatbot:
                 neg = -1
             if neg != -1 and neg != num_words-1:
                 for i in range(neg + 1, num_words):
-                    scores[i] *= -1 # flip score of words following 'not
+                    scores[i] *= -1 # flip score of words following 'not'
 
         return 1 if sum(scores) > 1 else -1
 
