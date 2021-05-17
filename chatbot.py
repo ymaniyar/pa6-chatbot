@@ -211,7 +211,7 @@ class Chatbot:
             indices = [i for i, x in enumerate(self.titles) if x[0] == title]
         return indices
 
-    def extract_sentiment(self, preprocessed_input):
+    def extract_sentiment(self, preprocessed_input, simple=True):
         # TODO: ADONIS
         """Extract a sentiment rating from a line of pre-processed text.
 
@@ -248,7 +248,7 @@ class Chatbot:
                 for i in range(neg + 1, num_words):
                     scores[i] *= -1 # flip score of words following 'not
 
-        return sum(scores)
+        return 1 if sum(scores) > 1 else -1
 
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
