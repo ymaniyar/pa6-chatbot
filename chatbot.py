@@ -28,7 +28,7 @@ class Chatbot:
 
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
         # integers easier for computation than strings, stems are better than specific words
-        self.sentiment = {p.stem(key): (1 if val == 'pos' else -1) for key, val in self.sentiment.items()}
+        self.sentiment = {self.p.stem(key): (1 if val == 'pos' else -1) for key, val in self.sentiment.items()}
 
         # Binarize the movie ratings before storing the binarized matrix.
         self.ratings = self.binarize(ratings)
@@ -195,14 +195,16 @@ class Chatbot:
         """
         articles = ['a','an','the']
         check = title.split(" ")[len(title.split(" "))-1]
-        year = re.match('(\(\d{4}\))',check).group(0)
+        year = re.match('(\(\d{4}\))',check)
         if year:
+            year = year.group(0)
             title = title.split(" " + year)[0]
         else:
             year = ""
         if len(title.split(" ")) > 1 and title.split(" ")[0].lower() in articles:
             title = title.split(" ",1)[1] + ", " + title.split(" ")[0]
         title = title + " " + year
+        title = title.lower()
         if year == "":
             indices = [i for i, x in enumerate(self.titles) if re.split(r'(\(\d{4}\))',x[0])[0] == title]
         else:
@@ -232,21 +234,21 @@ class Chatbot:
         """
 
         num_words = len(preprocessed_input.split())
-    	stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
-    	scores = [sentiment[stem] if stem in sentiment else 0 for stem in stemmed_input]
-    	if not simple:
-        	for i in range(1, num_words):
-            	if stemmed_input[i-1] in [self.p.stem('very'), self.p.stem('really')]:
-                scores[i] *= 2 # increase score of following word
-        	try:
-            	neg = stemmed_input.index('not')
-        	except ValueError:
-            	neg = -1
-        	if neg != -1 and neg != num_words-1: 
-            	for i in range(neg + 1, num_words):
-                	scores[i] *= -1 # flip score of words following 'not
-        
-    	return sum(scores)
+        stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
+        scores = [sentiment[stem] if stem in sentiment else 0 for stem in stemmed_input]
+        if not simple:
+            for i in range(1, num_words):
+                if stemmed_input[i-1] in [self.p.stem('very'), self.p.stem('really')]:
+                    scores[i] *= 2 # increase score of following word
+            try:
+                neg = stemmed_input.index('not')
+            except ValueError:
+                neg = -1
+            if neg != -1 and neg != num_words-1:
+                for i in range(neg + 1, num_words):
+                    scores[i] *= -1 # flip score of words following 'not
+
+        return sum(scores)
 
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
@@ -364,20 +366,20 @@ class Chatbot:
 
         You may assume that the two arguments have the same shape.
 
-        :param u: one vector, as a numpy array or 
+        :param u: one vector, as a numpy array or
         :param v: another vector, as a numpy array
 
         :returns: the cosine similarity between the two vectors
-    
+
         if 1D vectors given, returns scalar cosine similarity between arrays
-        if matrices P and Q given, returns cosine similarity matrix S 
+        if matrices P and Q given, returns cosine similarity matrix S
             where S[i, j] is cosine similarity between ith row of P and jth row of Q
         """
 
         norm_u = np.linalg.norm(u, axis=-1, keepdims=True)
         norm_v = np.linalg.norm(v, axis=0, keepdims=True)
         denoms = np.dot(norm_u, norm_v)
-        
+
         # avoid dividing by 0
         if np.isscalar(denoms):
             if denoms == 0:
@@ -430,21 +432,21 @@ class Chatbot:
 
         # Populate this list with k movie indices to recommend to the user.
         recommendations = []
-        
-        # similarity matrix of shape (num_movies, num_movies) where sims[i, j] 
+
+        # similarity matrix of shape (num_movies, num_movies) where sims[i, j]
         # is cosine similarity between movies i and j
         sims = self.similarity(ratings_matrix, ratings_matrix.T)
-        
-        # scores[i] = score for movie i, which is sum of user ratings weighted by similarity to movie i; 
+
+        # scores[i] = score for movie i, which is sum of user ratings weighted by similarity to movie i;
         # note that user ratings of 0 effectively do not contribute to score
         scores = np.sum(np.multiply(sims, user_ratings), axis=-1)
-        
+
         # we do not want to include movies that the user has already seen in final recommendations
         scores[user_ratings != 0] = np.NINF
-        
-        # recs are our k highest scoring movies 
+
+        # recs are our k highest scoring movies
         recommendations = list(np.argsort(-1*scores)[:k])
-        
+
         ########################################################################
         #                        END OF YOUR CODE                              #
         ########################################################################
