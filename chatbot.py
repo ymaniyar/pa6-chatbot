@@ -136,7 +136,7 @@ class Chatbot:
         # 1. remove non-alphanumeric characters
         # 2. convert to lowercase
 
-        text = re.sub(r'[^\w\s]', '', text.lower());
+        #text = re.sub(r'[^\w\s]', '', text.lower());
 
         ########################################################################
         #                             END OF YOUR CODE                         #
