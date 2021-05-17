@@ -5,6 +5,7 @@
 import util
 import re
 import numpy as np
+from porter_stemmer import PorterStemmer
 
 
 # noinspection PyMethodMayBeStatic
@@ -15,17 +16,23 @@ class Chatbot:
         # The chatbot's default name is `moviebot`.
         # TODO: Give your chatbot a new name.
         self.name = 'moviebot'
-
         self.creative = creative
+        self.p = PorterStemmer()
 
         # This matrix has the following shape: num_movies x num_users
         # The values stored in each row i and column j is the rating for
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
+        # convert movie titles to lowercase
+        self.titles = [[s.lower() for s in summary] for summary in self.titles]
+
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
+        # integers easier for computation than strings, stems are better than specific words
+        self.sentiment = {p.stem(key): (1 if val == 'pos' else -1) for key, val in self.sentiment.items()}
 
         # Binarize the movie ratings before storing the binarized matrix.
         self.ratings = self.binarize(ratings)
+
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
@@ -126,6 +133,11 @@ class Chatbot:
         # leave this method unmodified.                                        #
         ########################################################################
 
+        # 1. remove non-alphanumeric characters
+        # 2. convert to lowercase
+
+        text = re.sub(r'[^\w\s]', '', text.lower());
+
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
@@ -218,7 +230,23 @@ class Chatbot:
         pre-processed with preprocess()
         :returns: a numerical value for the sentiment of the text
         """
-        return 0
+
+        num_words = len(preprocessed_input.split())
+    	stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
+    	scores = [sentiment[stem] if stem in sentiment else 0 for stem in stemmed_input]
+    	if not simple:
+        	for i in range(1, num_words):
+            	if stemmed_input[i-1] in [self.p.stem('very'), self.p.stem('really')]:
+                scores[i] *= 2 # increase score of following word
+        	try:
+            	neg = stemmed_input.index('not')
+        	except ValueError:
+            	neg = -1
+        	if neg != -1 and neg != num_words-1: 
+            	for i in range(neg + 1, num_words):
+                	scores[i] *= -1 # flip score of words following 'not
+        
+    	return sum(scores)
 
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
