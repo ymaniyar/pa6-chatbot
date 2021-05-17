@@ -248,7 +248,12 @@ class Chatbot:
                 for i in range(neg + 1, num_words):
                     scores[i] *= -1 # flip score of words following 'not'
 
-        return 1 if sum(scores) > 1 else -1
+        if sum(scores) > 0:
+        	return 1 
+        elif sum(scores) == 0:
+        	return 0
+       	else
+       		return -1
 
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
