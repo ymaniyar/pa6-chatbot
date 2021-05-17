@@ -29,6 +29,8 @@ class Chatbot:
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
         # integers easier for computation than strings, stems are better than specific words
         self.sentiment = {self.p.stem(key): (1 if val == 'pos' else -1) for key, val in self.sentiment.items()}
+        self.negations = ['not', 'no', 'none', 'nobody', 'nothing', 'neither', 'nowhere', "won't",
+                         'never', "can't", "didn't", "couldn't", "wouldn't", "shouldn't"]
 
         # Binarize the movie ratings before storing the binarized matrix.
         self.ratings = self.binarize(ratings)
@@ -234,26 +236,26 @@ class Chatbot:
         """
 
         num_words = len(preprocessed_input.split())
-        stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
-        scores = [self.sentiment[stem] if stem in self.sentiment else 0 for stem in stemmed_input]
-        if not simple:
-            for i in range(1, num_words):
-                if stemmed_input[i-1] in [self.p.stem('very'), self.p.stem('really')]:
-                    scores[i] *= 2 # increase score of following word
-            try:
-                neg = stemmed_input.index('not')
-            except ValueError:
-                neg = -1
-            if neg != -1 and neg != num_words-1:
-                for i in range(neg + 1, num_words):
-                    scores[i] *= -1 # flip score of words following 'not'
-
+        stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]   
+        
+        scores = []
+        multiplier = 1
+        negation = 1
+        for stem in stemmed_input:
+            base = self.sentiment[stem] if stem in self.sentiment else 0
+            scores.append(base*multiplier*negation)
+            multiplier = 1
+            if stem in [self.p.stem('very'), self.p.stem('really')]:
+                multiplier = 2 # increase score of following word
+            if stem in self.negations:
+                negation *= -1
+        
         if sum(scores) > 0:
-        	return 1 
+            return 1 
         elif sum(scores) == 0:
-        	return 0
-       	else
-       		return -1
+            return 0
+        else:
+            return -1
 
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
