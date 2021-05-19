@@ -318,8 +318,33 @@ class Chatbot:
         :returns: a list of movie indices with titles closest to the given title
         and within edit distance max_distance
         """
+        min = max_distance
+        titles = []
+        for i in range(len(self.titles_no_year)):
+            movie = self.titles_no_year[i]
+            dist = self.min_edit_distance(title.lower(),movie.lower())
+            if dist < min:
+                titles.clear()
+                titles.append(i)
+                min = dist
+            elif dist == min:
+                titles.append(i)
+        return titles
 
-        pass
+    def min_edit_distance(self,source,target):
+        n = len(source)
+        m = len(target)
+        d = np.zeros((n+1,m+1))
+        for i in range(1,n+1):
+            d[i,0] = d[i-1,0] + 1
+        for i in range(1,m+1):
+            d[0,i] = d[0,i-1] + 1
+        for i in range(1,n+1):
+            for j in range(1,m+1):
+                ins_cost = 0 if source[i-1]==target[j-1] else 2
+                d[i,j] = min(d[i-1,j]+1,d[i-1,j-1]+ins_cost,d[i,j-1]+1)
+        return d[n,m]
+
 
     def disambiguate(self, clarification, candidates):
         """Creative Feature: Given a list of movies that the user could be
