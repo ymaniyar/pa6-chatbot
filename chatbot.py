@@ -24,13 +24,24 @@ class Chatbot:
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         # convert movie titles to lowercase
-        self.titles = [[s.lower() for s in summary] for summary in self.titles]
+        new_titles = []
+        for title in self.titles:
+            name = title[0]
+            article = re.search(r"(, (?:An|The|A))",name)
+            if article:
+                art = article.group(1)
+                name = name.replace(art,"")
+                name = art[2:] + " " + name
+            new_title = [name.lower(),title[1].lower()]
+            new_titles.append(new_title)
+        self.titles = new_titles
 
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
         # integers easier for computation than strings, stems are better than specific words
         self.sentiment = {self.p.stem(key): (1 if val == 'pos' else -1) for key, val in self.sentiment.items()}
-        self.negations = ['not', 'no', 'none', 'nobody', 'nothing', 'neither', 'nowhere', "won't",
-                         'never', "can't", "didn't", "couldn't", "wouldn't", "shouldn't"]
+        self.negations = ['not', 'no', 'none', 'nobody', 'nothing', 'neither', 'nowhere', "won't", 'never', "can't", "didn't", "couldn't", "wouldn't", "shouldn't"]
+        self.articles = ['a','an','the']
+
 
         # Binarize the movie ratings before storing the binarized matrix.
         self.ratings = self.binarize(ratings)
@@ -195,22 +206,12 @@ class Chatbot:
         :param title: a string containing a movie title
         :returns: a list of indices of matching movies
         """
-        articles = ['a','an','the']
-        check = title.split(" ")[len(title.split(" "))-1]
-        year = re.match('(\(\d{4}\))',check)
-        if year:
-            year = year.group(0)
-            title = title.split(" " + year)[0]
-        else:
-            year = ""
-        if len(title.split(" ")) > 1 and title.split(" ")[0].lower() in articles:
-            title = title.split(" ",1)[1] + ", " + title.split(" ")[0]
-        title = title + " " + year
         title = title.lower()
-        if year == "":
-            indices = [i for i, x in enumerate(self.titles) if re.split(r'(\(\d{4}\))',x[0])[0] == title]
-        else:
+        year = re.search('(\(\d{4}\))',title)
+        if year:
             indices = [i for i, x in enumerate(self.titles) if x[0] == title]
+        else:
+            indices = [i for i, x in enumerate(self.titles) if re.split(r'( \(\d{4}\))',x[0])[0] == title]
         return indices
 
     def extract_sentiment(self, preprocessed_input, simple=True):
@@ -236,8 +237,8 @@ class Chatbot:
         """
 
         num_words = len(preprocessed_input.split())
-        stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]   
-        
+        stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
+
         scores = []
         multiplier = 1
         negation = 1
@@ -249,9 +250,9 @@ class Chatbot:
                 multiplier = 2 # increase score of following word
             if stem in self.negations:
                 negation *= -1
-        
+
         if sum(scores) > 0:
-            return 1 
+            return 1
         elif sum(scores) == 0:
             return 0
         else:

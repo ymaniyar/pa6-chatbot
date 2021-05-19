@@ -1,4 +1,4 @@
-# Homework 6: Chatbot! 
+# Homework 6: Chatbot!
 
 **Late days CANNOT be used on this assignment. Please submit early and often to avoid last minute submission issues!**
 
@@ -50,7 +50,7 @@ You can type your message in the prompt to moviebot, our default chatbot, and hi
 In the testing/test_scripts/ folder, you will find some testing scripts. To run a script, enter the following command (replace testing/test_scripts/simple.txt with your desired script):
 
     python repl.py < testing/test_scripts/simple.txt
-    
+
 As you can see, each line of `simple.txt` is entered consecutively into the chatbot. However, the script terminates once it hits `:quit` and any lines afterwards will not be executed.
 
 This will useful when you want to test the same script multiple times. We will be testing your code with similar (but not the same) scripts as the ones provided in test_inputs.
@@ -74,10 +74,10 @@ The bot understands everything, so it echoes your sentiment. It’s a bit repeti
     > I was completely amazed at how "Rush Hour 3" was pretty much the most ridiculous thing I've seen in my entire life.
 This sentence was too hard for the starter bot. That’s okay!
 
-    moviebot> I'm sorry, I'm not quite sure if you liked "Rush Hour 3". 
+    moviebot> I'm sorry, I'm not quite sure if you liked "Rush Hour 3".
     Tell me more about "Rush Hour 3".
     > I hated "Rush Hour 3".
-    moviebot> You did not like "Rush Hour 3". Thank you! 
+    moviebot> You did not like "Rush Hour 3". Thank you!
     Tell me about another movie you have seen.
     > Oh, I also thought "The Little Mermaid" was fantastic!
     moviebot> You liked "The Little Mermaid". Thank you! Tell me about another movie you have seen.
@@ -92,9 +92,9 @@ The bot can’t handle this, but that’s okay.
     I didn't like "The Notebook".
 The bot makes a mistake in sentiment extraction in its reply below. This was a pretty straightfoward sentence, so this mistake should be penalized.
 
-    moviebot> You liked "The Notebook". Thank you! 
+    moviebot> You liked "The Notebook". Thank you!
     That's enough for me to make a recommendation.
-    I suggest you watch "In the Heart of the Sea". 
+    I suggest you watch "In the Heart of the Sea".
     Would you like to hear another recommendation? (Or enter :quit if you're done.)
     > :quit
     moviebot> Thank you for hanging out with me! Stay in touch! Goodbye!
