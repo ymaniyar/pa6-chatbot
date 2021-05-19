@@ -322,16 +322,17 @@ class Chatbot:
         titles = []
         for i in range(len(self.titles_no_year)):
             movie = self.titles_no_year[i]
-            dist = self.min_edit_distance(title.lower(),movie.lower())
-            if dist < min:
-                titles.clear()
-                titles.append(i)
-                min = dist
-            elif dist == min:
-                titles.append(i)
+            dist = self.min_edit_distance(title.lower(),movie.lower(),max_distance)
+            if dist != -1:
+                if dist < min:
+                    titles.clear()
+                    titles.append(i)
+                    min = dist
+                elif dist == min:
+                    titles.append(i)
         return titles
 
-    def min_edit_distance(self,source,target):
+    def min_edit_distance(self,source,target,max):
         n = len(source)
         m = len(target)
         d = np.zeros((n+1,m+1))
@@ -343,6 +344,9 @@ class Chatbot:
             for j in range(1,m+1):
                 ins_cost = 0 if source[i-1]==target[j-1] else 2
                 d[i,j] = min(d[i-1,j]+1,d[i-1,j-1]+ins_cost,d[i,j-1]+1)
+                if min(d[:,j]) > max:
+                    return -1
+                    break
         return d[n,m]
 
 
