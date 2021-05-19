@@ -25,6 +25,7 @@ class Chatbot:
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         # convert movie titles to lowercase
         new_titles = []
+        self.titles_no_year = []
         for title in self.titles:
             name = title[0]
             article = re.search(r"(, (?:An|The|A))",name)
@@ -34,6 +35,7 @@ class Chatbot:
                 name = art[2:] + " " + name
             new_title = [name.lower(),title[1].lower()]
             new_titles.append(new_title)
+            self.titles_no_year.append(re.split(r'( \(\d{4}\))',name.lower())[0])
         self.titles = new_titles
 
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
@@ -185,6 +187,18 @@ class Chatbot:
 
         ##Question mark makes expression lazy rather than greedy (stops as soon as it finds something).
         matches=re.findall(r'\"(.+?)\"',preprocessed_input)
+        if len(matches) == 0:
+            matches = []
+            words = preprocessed_input.lower().split()
+            for i in range(len(words)):
+                base = words[i]
+                for j in range(i+1,len(words)+1):
+                    if base in self.titles_no_year:
+                        matches.append(base)
+                    elif base[:len(base)-1] in self.titles_no_year:
+                        matches.append(base[:len(base)-1])
+                    if j < len(words):
+                        base = base + " " + words[j]
         return matches
 
     def find_movies_by_title(self, title):
@@ -211,7 +225,7 @@ class Chatbot:
         if year:
             indices = [i for i, x in enumerate(self.titles) if x[0] == title]
         else:
-            indices = [i for i, x in enumerate(self.titles) if re.split(r'( \(\d{4}\))',x[0])[0] == title]
+            indices = [i for i, x in enumerate(self.titles_no_year) if x == title]
         return indices
 
     def extract_sentiment(self, preprocessed_input, simple=True):

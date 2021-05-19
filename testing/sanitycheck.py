@@ -110,6 +110,8 @@ def test_extract_titles():
     test_cases = [
         ('I liked "The Notebook"', ["The Notebook"]),
         ('You are a great bot!', []),
+        ('I liked The NoTeBoOk!', ["the notebook"]),
+        ('I thought 10 things i hate about you was great', ["10", "10 things I hate about you"]),
         ('I enjoyed "Titanic (1997)" and "Scream 2 (1997)"',
          ["Titanic (1997)", "Scream 2 (1997)"]),
     ]
