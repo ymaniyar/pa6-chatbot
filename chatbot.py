@@ -66,8 +66,9 @@ class Chatbot:
                 self.genres_map[name_with_year].append(title[1])
                 self.title_to_idx[name_with_year].append(i)
                 self.title_to_idx[name].append(i)
-
                 self.titles_no_year.append(name.lower())
+                self.titles_no_year_set = set(self.titles_no_year)
+
                 # self.titles_no_year.append(re.split(r'( \(\d{4}\))',name.lower())[0])
         # self.titles = new_titles
 
@@ -361,7 +362,7 @@ class Chatbot:
         """
         min = max_distance
         titles = []
-        for movie in self.title_to_idx.keys():
+        for movie in self.titles_no_year_set:
             dist = self.min_edit_distance(title.lower(),movie.lower(),max_distance)
             if dist != -1:
                 if dist < min:
@@ -370,7 +371,7 @@ class Chatbot:
                     min = dist
                 elif dist == min:
                     titles.extend(self.title_to_idx[movie])
-        return titles
+        return np.unique(titles)
 
     def min_edit_distance(self,source,target,max):
         n = len(source)
