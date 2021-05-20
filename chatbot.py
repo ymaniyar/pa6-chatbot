@@ -66,7 +66,7 @@ class Chatbot:
                 self.genres_map[name_with_year].append(title[1])
                 self.title_to_idx[name_with_year].append(i)
                 self.title_to_idx[name].append(i)
-                
+
                 self.titles_no_year.append(name.lower())
                 # self.titles_no_year.append(re.split(r'( \(\d{4}\))',name.lower())[0])
         # self.titles = new_titles
@@ -291,6 +291,7 @@ class Chatbot:
         multiplier = 1
         negation = 1
         for stem in stemmed_input:
+            print(stem)
             base = self.sentiment[stem] if stem in self.sentiment else 0
             scores.append(base*multiplier*negation)
             multiplier = 1
@@ -328,10 +329,11 @@ class Chatbot:
         """
         titles = self.extract_titles(preprocessed_input)
         descriptions = preprocessed_input.split(titles[0])
-        sentiment_first = self.extract_sentiment(re.sub(r'[^\w\s]', '', descriptions[0].lower()))
-        sentiment_second = self.extract_sentiment(re.sub(r'[^\w\s]', '', descriptions[1].lower()))
+        sentiment_first = self.extract_sentiment(descriptions[0].lower())
+        sentiment_second = self.extract_sentiment(descriptions[1].lower())
         if sentiment_second == 0:
-            sentiment_second = sentiment_first
+            to_send = descriptions[1].lower() + descriptions[0].lower()
+            sentiment_second = self.extract_sentiment(to_send)
         return([(titles[0],sentiment_first),(titles[1],sentiment_second)])
 
     def find_movies_closest_to_title(self, title, max_distance=3):
@@ -359,16 +361,15 @@ class Chatbot:
         """
         min = max_distance
         titles = []
-        for i in range(len(self.titles_no_year)):
-            movie = self.titles_no_year[i]
+        for movie in self.title_to_idx.keys():
             dist = self.min_edit_distance(title.lower(),movie.lower(),max_distance)
             if dist != -1:
                 if dist < min:
                     titles.clear()
-                    titles.append(i)
+                    titles.extend(self.title_to_idx[movie])
                     min = dist
                 elif dist == min:
-                    titles.append(i)
+                    titles.extend(self.title_to_idx[movie])
         return titles
 
     def min_edit_distance(self,source,target,max):
@@ -412,6 +413,7 @@ class Chatbot:
         :returns: a list of indices corresponding to the movies identified by
         the clarification
         """
+
         pass
 
     ############################################################################
