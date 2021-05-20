@@ -1,5 +1,6 @@
 data/*
 .*.un~
 testing/outputs-for-scripts
-__pycache__/
-chatbot.pyc
+__pycache__
+*.pyc
+
