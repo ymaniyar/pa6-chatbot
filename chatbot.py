@@ -25,7 +25,7 @@ class Chatbot:
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         # new_titles = []
-        self.titles_no_year = []
+        self.titles_no_year = set()
         self.title_to_idx = defaultdict(list)
         self.genres_map = defaultdict(list)
         for i, title in enumerate(self.titles):
@@ -66,8 +66,8 @@ class Chatbot:
                 self.genres_map[name_with_year].append(title[1])
                 self.title_to_idx[name_with_year].append(i)
                 self.title_to_idx[name].append(i)
-                self.titles_no_year.append(name.lower())
-                self.titles_no_year_set = set(self.titles_no_year)
+                self.titles_no_year.add(name.lower())
+                # self.titles_no_year_set = set(self.titles_no_year)
 
                 # self.titles_no_year.append(re.split(r'( \(\d{4}\))',name.lower())[0])
         # self.titles = new_titles
@@ -159,7 +159,7 @@ class Chatbot:
                     elif tense == 'I':
                         response = f'{tense} might be able to {content} in the near future.'
                 elif root == 'what':
-                    response = f'I am not exactly sure what {content} {tense}.'
+                    response = f'I am not exactly sure what {content} {tense}.' 
             else:
                 response = "I processed {} in creative mode!!".format(line)
         else:
@@ -407,7 +407,7 @@ class Chatbot:
         """
         min = max_distance
         titles = []
-        for movie in self.titles_no_year_set:
+        for movie in self.titles_no_year:
             dist = self.min_edit_distance(title.lower(),movie.lower(),max_distance)
             if dist != -1:
                 if dist < min:
