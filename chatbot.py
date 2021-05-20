@@ -6,6 +6,7 @@ import util
 import re
 import numpy as np
 from porter_stemmer import PorterStemmer
+from collections import defaultdict
 
 
 # noinspection PyMethodMayBeStatic
@@ -23,20 +24,52 @@ class Chatbot:
         # The values stored in each row i and column j is the rating for
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
-        # convert movie titles to lowercase
-        new_titles = []
+        # new_titles = []
         self.titles_no_year = []
-        for title in self.titles:
+        self.title_to_idx = defaultdict(list)
+        self.genres_map = defaultdict(list)
+        for i, title in enumerate(self.titles):
             name = title[0]
-            article = re.search(r"(, (?:An|The|A))",name)
-            if article:
-                art = article.group(1)
-                name = name.replace(art,"")
-                name = art[2:] + " " + name
-            new_title = [name.lower(),title[1].lower()]
-            new_titles.append(new_title)
-            self.titles_no_year.append(re.split(r'( \(\d{4}\))',name.lower())[0])
-        self.titles = new_titles
+            year_search = re.search(r'( \(\d+(?:-\d*)?\))', name)
+            year = None
+            if year_search:
+                year = year_search.group(1)
+
+            alternates = re.search(r"((?:\([^\)]+\)\s*)+)(?:\(\d\d\d\d\))", name)
+            if alternates:
+                main_name = name.split(' (')[0]
+                names = [main_name]
+                alts = alternates.group(1).split(') ')[:-1]
+                for alt in alts:
+                    alt = alt[1:]
+                    aka = re.search(r"(\s*a\.k\.a\.\s*)", alt)
+                    if aka:
+                        alt = alt.replace(aka.group(1), "")
+                    names.append(alt)
+            else:
+                if not year:
+                    names = [name]
+                else:
+                    names = [name.replace(year, "")]
+            for name in names:
+                article = re.search(r"(, (?:An|The|A|La|Le|Les|Il|L\'|I))$",name)
+                if article:
+                    art = article.group(1)
+                    name = name.replace(art,"")
+                    name = art[2:] + " " + name
+                if not year:
+                    year = ""
+                # new_title = [name.lower()+year,title[1].lower()]
+                # new_titles.append(new_title)
+                name = name.lower()
+                name_with_year = name+year
+                self.genres_map[name_with_year].append(title[1])
+                self.title_to_idx[name_with_year].append(i)
+                self.title_to_idx[name].append(i)
+                
+                self.titles_no_year.append(name.lower())
+                # self.titles_no_year.append(re.split(r'( \(\d{4}\))',name.lower())[0])
+        # self.titles = new_titles
 
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
         # integers easier for computation than strings, stems are better than specific words
@@ -59,10 +92,10 @@ class Chatbot:
     def greeting(self):
         """Return a message that the chatbot uses to greet the user."""
         ########################################################################
-        # TODO: Write a short greeting message                                 #
+        # Write a short greeting message                                 #
         ########################################################################
 
-        greeting_message = "How can I help you?"
+        greeting_message = "Hi! Tell me about some movies you have watched."
 
         ########################################################################
         #                             END OF YOUR CODE                         #
@@ -74,10 +107,10 @@ class Chatbot:
         Return a message that the chatbot uses to bid farewell to the user.
         """
         ########################################################################
-        # TODO: Write a short farewell message                                 #
+        # Write a short farewell message                                 #
         ########################################################################
 
-        goodbye_message = "Have a nice day!"
+        goodbye_message = "See you later!"
 
         ########################################################################
         #                          END OF YOUR CODE                            #
@@ -222,10 +255,11 @@ class Chatbot:
         """
         title = title.lower()
         year = re.search('(\(\d{4}\))',title)
-        if year:
-            indices = [i for i, x in enumerate(self.titles) if x[0] == title]
-        else:
-            indices = [i for i, x in enumerate(self.titles_no_year) if x == title]
+        # if year:
+        #     indices = [i for i, x in enumerate(self.titles) if x[0] == title]
+        # else:
+        #     indices = [i for i, x in enumerate(self.titles_no_year) if x == title]
+        indices = self.title_to_idx[title]
         return indices
 
     def extract_sentiment(self, preprocessed_input, simple=True):

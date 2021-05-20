@@ -144,6 +144,8 @@ def test_find_movies_by_title():
         ('An American in Paris (1951)', [721]),
         ('The Notebook (1220)', []),
         ('Scream', [1142]),
+        ('Se7en', [45]),
+        ('La Guerre du feu', [2439])
     ]
 
     tests_passed = True
