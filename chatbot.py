@@ -149,7 +149,19 @@ class Chatbot:
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
         if self.creative:
-            response = "I processed {} in creative mode!!".format(line)
+            line = self.preprocess(line)
+            root, tense, content = self.parse_line(line)
+            print(root, tense, content)
+            if root:
+                if root == 'can':
+                    if tense == 'you':
+                        response = f'Feel free to {content} if {tense} want!'
+                    elif tense == 'I':
+                        response = f'{tense} might be able to {content} in the near future.'
+                elif root == 'what':
+                    response = f'I am not exactly sure what {content} {tense}.'
+            else:
+                response = "I processed {} in creative mode!!".format(line)
         else:
             response = "I processed {} in starter mode!!".format(line)
 
@@ -158,8 +170,40 @@ class Chatbot:
         ########################################################################
         return response
 
-    @staticmethod
-    def preprocess(text):
+    def correct_tense(self, content):
+        content = re.sub(r'( me | me$|^me | i | i$|^i )', ' #you# ', content)
+        content = re.sub(r'( am | am$|^am )', ' are ', content)
+        content = re.sub(r'( you | you$|^you )', ' I ', content)
+        content = re.sub(r'( #you# | #you#$|^#you# )', ' you ', content)
+        content = content.strip()
+        return content
+
+    def parse_line(self, line):
+        ending_punc = re.search(r'([\.\,\?\!]+)$', line)
+        if ending_punc:
+            line = line.replace(ending_punc.group(1), "")
+        can_i = re.search(r'^((?:can|could|would)\s+i)', line)
+        can_u = re.search(r'^((?:can|could|would)\s+(?:you|u))', line)
+        what_is = re.search(r'^((?:what|how)\s+is)', line)
+        what_are = re.search(r'^((?:what|how)\s+are)', line)
+        if can_i:
+            content = line.replace(can_i.group(1), "")
+            content = self.correct_tense(content)
+            return ('can', 'you', content)
+        elif can_u:
+            content = line.replace(can_u.group(1), "").strip()
+            content = self.correct_tense(content)
+            return ('can', 'I', content)
+        elif what_is:
+            content = line.replace(what_is.group(1), "").strip()
+            return ('what', 'is', content)
+        elif what_are:
+            content = line.replace(what_are.group(1), "").strip()
+            return ('what', 'are', content)
+        else:
+            return (None, None, content)
+
+    def preprocess(self, text):
         """Do any general-purpose pre-processing before extracting information
         from a line of text.
 
@@ -186,7 +230,8 @@ class Chatbot:
         # 2. convert to lowercase
 
         #text = re.sub(r'[^\w\s]', '', text.lower());
-
+        if self.creative:
+            text = text.lower().strip()
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
