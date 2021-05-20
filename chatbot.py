@@ -264,7 +264,6 @@ class Chatbot:
                 multiplier = 2 # increase score of following word
             if stem in self.negations:
                 negation *= -1
-
         if sum(scores) > 0:
             return 1
         elif sum(scores) == 0:
@@ -293,7 +292,13 @@ class Chatbot:
         :returns: a list of tuples, where the first item in the tuple is a movie
         title, and the second is the sentiment in the text toward that movie
         """
-        pass
+        titles = self.extract_titles(preprocessed_input)
+        descriptions = preprocessed_input.split(titles[0])
+        sentiment_first = self.extract_sentiment(re.sub(r'[^\w\s]', '', descriptions[0].lower()))
+        sentiment_second = self.extract_sentiment(re.sub(r'[^\w\s]', '', descriptions[1].lower()))
+        if sentiment_second == 0:
+            sentiment_second = sentiment_first
+        return([(titles[0],sentiment_first),(titles[1],sentiment_second)])
 
     def find_movies_closest_to_title(self, title, max_distance=3):
         """Creative Feature: Given a potentially misspelled movie title,
