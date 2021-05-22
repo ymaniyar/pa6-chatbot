@@ -5,6 +5,7 @@
 import util
 import re
 import numpy as np
+import random
 from porter_stemmer import PorterStemmer
 from collections import defaultdict
 
@@ -434,6 +435,49 @@ class Chatbot:
                     return -1
                     break
         return d[n,m]
+
+
+    def identify_emotion(self, line):
+        # ADONIS
+        # 'line' should only be passed to this function if movie info could not be extracted from it
+        # 'line' should be all lowercase from pre-processing
+        # synonyms are top results from thesaurus.com
+        # uses explicit confirmation
+        # does not respond to negations
+        emotions = {
+            'angry': {'angry','bitter','enraged','exasperated','furious','heated','impassioned',
+                              'indignant','irate','irritable','irritated','offended','outraged',
+                              'resentful','sullen','uptight'},
+            'sad': {'sad','dismal','heartbroken','melancholic','depressed','mournful',
+                    'pessimistic','somber','sorrowful','sorry','wistful'},
+            'happy': {'happy','cheerful','contented','delighted','ecstatic','elated','glad',
+                      'joyful','joyous','jubilant','lively','merry','overjoyed','peaceful','pleasant',
+                      'pleased','thrilled','euphoric'}
+        }
+
+        response = "Sorry, I didn't catch that. Could you rephrase?"
+        found = re.search(r'(?:I am|I\'m)(?: |\w)+', line)
+        if found:
+            sentiment = self.extract_sentiment(found.group())
+            for root in emotions: # assumes only one emotion is present in response
+                for synonym in emotions[root]:
+                    if synonym in found.group():
+                        print(sentiment)
+                        if root in ('angry','sad') and sentiment != 1: # make sure sentiment doesn't conflict root
+                            options = [f"Oh! Did I make you {root}? I aplogize.",
+                                       f"Yikes! I may have caused you to become {root}. Please forgive me.",
+                                       f"You're {root}? I'm sorry to have made you feel that way.",
+                                       f"I didn't mean to make you {root}. I hope you can forgive me."]
+                            response = random.choice(options)
+                        elif root == 'happy' and sentiment != -1:
+                            options = [f"Great! It's good to hear that you're {root}.",
+                                       f"Glad you're feeling {root}!",
+                                       f"Amazing! I'm {root} that you're {root} :)",
+                                       f"Yay! I hope my movie recommendations make you {root} too.",
+                                       f"Nice! I hope that you contine you to be {root}."]
+                            response = random.choice(options)
+        return response       
+
 
 
     def disambiguate(self, clarification, candidates):
