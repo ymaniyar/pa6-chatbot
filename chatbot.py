@@ -10,6 +10,8 @@ from porter_stemmer import PorterStemmer
 from collections import defaultdict
 
 
+NOT_SURE = "Hmm...not sure about that. Please tell me about a movie you have watched."
+
 # noinspection PyMethodMayBeStatic
 class Chatbot:
     """Simple class to implement the chatbot for PA 6."""
@@ -25,7 +27,7 @@ class Chatbot:
         # The values stored in each row i and column j is the rating for
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
-        # new_titles = []
+        self.formatted_names = {'with_year': [], 'without_year':[]}
         self.titles_no_year = set()
         self.title_to_idx = defaultdict(list)
         self.genres_map = defaultdict(list)
@@ -52,6 +54,8 @@ class Chatbot:
                     names = [name]
                 else:
                     names = [name.replace(year, "")]
+            new_names = []
+            new_names_with_year = []
             for name in names:
                 article = re.search(r"(, (?:An|The|A|La|Le|Les|Il|L\'|I))$",name)
                 if article:
@@ -62,22 +66,75 @@ class Chatbot:
                     year = ""
                 # new_title = [name.lower()+year,title[1].lower()]
                 # new_titles.append(new_title)
-                name = name.lower()
+                new_names.append(name)
                 name_with_year = name+year
+                new_names_with_year.append(name_with_year)
+                name = name.lower()
+                name_with_year = name_with_year.lower()
                 self.genres_map[name_with_year].append(title[1])
                 self.title_to_idx[name_with_year].append(i)
                 self.title_to_idx[name].append(i)
                 self.titles_no_year.add(name.lower())
                 # self.titles_no_year_set = set(self.titles_no_year)
-
                 # self.titles_no_year.append(re.split(r'( \(\d{4}\))',name.lower())[0])
-        # self.titles = new_titles
+            self.formatted_names['without_year'].append(new_names)
+            self.formatted_names['with_year'].append(new_names_with_year)
 
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
+
         # integers easier for computation than strings, stems are better than specific words
         self.sentiment = {self.p.stem(key): (1 if val == 'pos' else -1) for key, val in self.sentiment.items()}
-        self.negations = ['not', 'no', 'none', 'nobody', 'nothing', 'neither', 'nowhere', "won't", 'never', "can't", "didn't", "couldn't", "wouldn't", "shouldn't"]
+        self.negations = ['not',
+                            'no',
+                            'none',
+                            'nobody', 
+                            'nothing', 
+                            'neither', 
+                            'nowhere', 
+                            'never', 
+                            "won't", 
+                            "can't", 
+                            "didn't", 
+                            "couldn't", 
+                            "wouldn't", 
+                            "shouldn't", 
+                            "wont", 
+                            "cant", 
+                            "didnt", 
+                            "couldnt", 
+                            "wouldnt", 
+                            "shouldnt"]
         self.articles = ['a','an','the']
+        self.yes = ['yes', 
+                    'yup', 
+                    'yeah', 
+                    'yea', 
+                    'yah', 
+                    'ya', 
+                    'sure', 
+                    'mhm', 
+                    'yurp', 
+                    'definitely', 
+                    'absolutely', 
+                    'i did',
+                    'i do']
+        self.no = ['no', 
+                    'nope', 
+                    'not really', 
+                    'na', 
+                    'nah', 
+                    'i did not', 
+                    'i do not',
+                    'no way', 
+                    'definitely not', 
+                    'absolutely not', 
+                    "i didn't",
+                    "i didnt"]
+        # chatbot logistics
+        self.user_ratings = np.zeros(len(self.titles))
+        self.ratings_counter = 0
+        self.num_ratings_needed = 5
+        self.prev_q_data = None
 
 
         # Binarize the movie ratings before storing the binarized matrix.
@@ -149,11 +206,19 @@ class Chatbot:
         # directly based on how modular it is, we highly recommended writing   #
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
+        line = self.preprocess(line)
         if self.creative:
-            line = self.preprocess(line)
             root, tense, content = self.parse_line(line)
+            movie_names = self.extract_titles(line)
             print(root, tense, content)
-            if root:
+            if root and root == 'done':
+                response = self.deliver_recs()
+            elif root and root in ['yes', 'no']:
+                if self.prev_q_data:
+                    response = self.process_prev_q_response(root)
+                else:
+                    response = NOT_SURE
+            elif root and root in ['can', 'what']:
                 if root == 'can':
                     if tense == 'you':
                         response = f'Feel free to {content} if {tense} want!'
@@ -161,14 +226,86 @@ class Chatbot:
                         response = f'{tense} might be able to {content} in the near future.'
                 elif root == 'what':
                     response = f'I am not exactly sure what {content} {tense}.' 
+            elif len(movie_names) > 0:
+                for movie_name in movie_names:
+                    movie_idxs = self.find_movies_closest_to_title(movie_name)
+                    # TODO: DISAMBIGUATION HERE to find correct movie_idx
+                    # movie_idx = self.find_movies_by_title(movie_name)[0]
+                    # sentiment = self.extract_sentiment(line)
+                    # response = self.process_movie_rating(movie_idx, sentiment)
             else:
-                response = "I processed {} in creative mode!!".format(line)
+                response = self.identify_emotion(line)
         else:
-            response = "I processed {} in starter mode!!".format(line)
+            root, tense, content = self.parse_line(line)
+            movie_names = self.extract_titles(line)
+            print(root, tense, content)
+            if root == 'done':
+                response = self.deliver_recs()
+            elif root in ['yes', 'no']:
+                if self.prev_q_data:
+                    response = self.process_prev_q_response(root)
+                else:
+                    response = NOT_SURE
+            elif len(movie_names) > 0:
+                movie_name = movie_names[0]
+                movie_idx = self.find_movies_by_title(movie_name)[0]
+                sentiment = self.extract_sentiment(line)
+                response = self.process_movie_rating(movie_idx, sentiment)
+            else:
+                response = self.identify_emotion(line)
+
+                    
 
         ########################################################################
         #                          END OF YOUR CODE                            #
         ########################################################################
+        return response
+    
+    def process_movie_rating(self, movie_idx, sentiment):
+        formatted_movie_name = self.formatted_names['without_year'][movie_idx][0]
+        if sentiment != 0:
+            response = self.add_rating(movie_idx, sentiment)
+        else:
+            response = f"Did you like {formatted_movie_name}?"
+            self.prev_q_data = {'type': 'ask_if_liked', 'movie_idx': movie_idx}
+        return response
+        
+
+    def deliver_recs(self):
+        if self.ratings_counter < self.num_ratings_needed:
+            response = f'Sorry, we need at least {self.num_ratings_needed} before we can give you recommendations! Tell me about a movie you have watched.'
+        else:
+            movie_recs = self.recommend(self.user_ratings, self.ratings)
+            movie_recs_str = ""
+            for i, idx in enumerate(movie_recs):
+                movie_recs_str += f"\n{self.formatted_names['with_year'][idx][0]}"
+            response = f'Perfect! Here are some movies I would recommend to you based on your ratings: {movie_recs_str}'
+        return response
+
+    def process_prev_q_response(self, response):
+        if self.prev_q_data['type'] == 'ask_if_liked':
+            movie_idx = self.prev_q_data['movie_idx']
+            if response == 'yes':
+                sentiment = 1
+            else:
+                sentiment = -1
+            response = self.add_rating(movie_idx, sentiment)
+        else:
+            response = NOT_SURE
+        return response
+
+    def add_rating(self, movie_idx, sentiment):
+        formatted_movie_name = self.formatted_names['without_year'][movie_idx][0]
+        if self.user_ratings[movie_idx] == 0:
+            self.ratings_counter += 1
+        self.user_ratings[movie_idx] = sentiment
+        if sentiment > 0:
+            sentiment_str = 'liked'
+        else:
+            sentiment_str = 'did not like'
+        response = f'Okay, I have noted that you {sentiment_str} {formatted_movie_name}.'
+        if self.ratings_counter >= self.num_ratings_needed:
+            response += " Say \'done\' when you would like to hear my movie recommendations for you!"
         return response
 
     def correct_tense(self, content):
@@ -180,6 +317,12 @@ class Chatbot:
         return content
 
     def parse_line(self, line):
+        if line in self.yes:
+            return ('yes', None, line)
+        elif line in self.no:
+            return ('no', None, line)
+        elif line == 'done':
+            return ('done', None, line)
         ending_punc = re.search(r'([\.\,\?\!]+)$', line)
         if ending_punc:
             line = line.replace(ending_punc.group(1), "")
@@ -202,7 +345,7 @@ class Chatbot:
             content = line.replace(what_are.group(1), "").strip()
             return ('what', 'are', content)
         else:
-            return (None, None, content)
+            return (None, None, line)
 
     def preprocess(self, text):
         """Do any general-purpose pre-processing before extracting information
@@ -233,6 +376,8 @@ class Chatbot:
         #text = re.sub(r'[^\w\s]', '', text.lower());
         if self.creative:
             text = text.lower().strip()
+        else:
+            text = text.strip()
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
@@ -338,7 +483,7 @@ class Chatbot:
         multiplier = 1
         negation = 1
         for stem in stemmed_input:
-            print(stem)
+            # print(stem)
             base = self.sentiment[stem] if stem in self.sentiment else 0
             scores.append(base*multiplier*negation)
             multiplier = 1
@@ -456,7 +601,7 @@ class Chatbot:
         }
 
         response = "Sorry, I didn't catch that. Could you rephrase?"
-        found = re.search(r'(?:I am|I\'m)(?: |\w)+', line)
+        found = re.search(r'(?:^i am | i am |^i\'m | i\'m |^im | im | im$)(?: |\w)+', line)
         if found:
             sentiment = self.extract_sentiment(found.group())
             for root in emotions: # assumes only one emotion is present in response
