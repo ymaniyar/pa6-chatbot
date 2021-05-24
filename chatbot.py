@@ -234,7 +234,7 @@ class Chatbot:
                     response = f'I am not exactly sure what {content} {tense}.'
 
             # user has mispelled movies
-            
+
 
 
 
@@ -493,46 +493,47 @@ class Chatbot:
 
         ##Question mark makes expression lazy rather than greedy (stops as soon as it finds something).
         matches=re.findall(r'\"(.+?)\"',preprocessed_input)
-        if len(matches) == 0:
-            matches = []
-            words = preprocessed_input.lower().split()
-            for i in range(len(words)):
-                base = words[i]
-                for j in range(i+1,len(words)+1):
-                    if base in self.titles_no_year:
-                        matches.append(base)
-                    elif base[:len(base)-1] in self.titles_no_year:
-                        matches.append(base[:len(base)-1])
-                    if j < len(words):
-                        base = base + " " + words[j]
+        if len(matches) == 0 and self.creative:
+            matches = self.submovies_helper(preprocessed_input)
+        return matches
+
+    # Find all possible movies in line given by user
+    def submovies_helper(self,line):
+        matches = []
+        words = line.lower().split()
+        for i in range(len(words)):
+            base = words[i]
+            for j in range(i+1,len(words)+1):
+                if base in self.titles_no_year:
+                    matches.append(base)
+                elif base[:len(base)-1] in self.titles_no_year:
+                    matches.append(base[:len(base)-1])
+                if j < len(words):
+                    base = base + " " + words[j]
+        return matches
+
+
+    def submovies_helper_2(self,line):
+        line = line.lower()
+        matches = []
+        for title in self.formatted_names['with_year']:
+            title_2 = ' ' + title[0].lower()
+            title_2 = title_2.replace(line,"XXXX")
+            check = re.search(r'[^a-zA-Z\d]XXXX[^a-zA-Z\d]',title_2)
+            if check:
+                matches.append(title[0])
         return matches
 
     def find_movies_by_title(self, title):
         # SOFIA
-        """ Given a movie title, return a list of indices of matching movies.
-
-        - If no movies are found that match the given title, return an empty
-        list.
-        - If multiple movies are found that match the given title, return a list
-        containing all of the indices of these matching movies.
-        - If exactly one movie is found that matches the given title, return a
-        list
-        that contains the index of that matching movie.
-
-        Example:
-          ids = chatbot.find_movies_by_title('Titanic')
-          print(ids) // prints [1359, 2716]
-
-        :param title: a string containing a movie title
-        :returns: a list of indices of matching movies
-        """
         title = title.lower()
         year = re.search('(\(\d{4}\))',title)
-        # if year:
-        #     indices = [i for i, x in enumerate(self.titles) if x[0] == title]
-        # else:
-        #     indices = [i for i, x in enumerate(self.titles_no_year) if x == title]
         indices = self.title_to_idx[title]
+        if self.creative:
+            matches = self.submovies_helper_2(title)
+            indices = []
+            for match in matches:
+                indices.extend(self.title_to_idx[match.lower()])
         return indices
 
     def extract_sentiment(self, preprocessed_input, simple=True):
@@ -731,27 +732,27 @@ class Chatbot:
         """
         clarification = clarification.lower()
         single_digit = False
-        
+
         if clarification.isdigit() and len(clarification) == 1: # minimize false positives -> search for installment
             clarification = ' ' + clarification + ' '
             single_digit = True
-            
+
         if clarification.startswith(('19', '20')) and len(clarification) == 4: # minimize false positives -> search for year
             clarification = '(' + clarification + ')'
-            
+
         narrower = [i for i in candidates if clarification in self.titles[i][0]]
-        
+
         if single_digit and len(narrower) == 0: # assumes digit is 1-index in list if installment search not successful
             i = int(clarification.strip())
             if 0 < i <= len(candidates):
                 narrower = [candidates[i - 1]]
-                
+
         if 'most recent' in clarification or 'newest' in clarification: # assume candidates in list can be distinguished by year
             narrower = [max(candidates, key=lambda i: int(re.search(r'\(\d{4}\)', self.titles[i][0]).group()[1:-1]))]
-            
+
         if 'least recent' in clarification or 'oldest' in clarification: # assume candidates in list can be distinguished by year
             narrower = [min(candidates, key=lambda i: int(re.search(r'\(\d{4}\)', self.titles[i][0]).group()[1:-1]))]
-        
+
              # try ordinal index representation
         if 'first' in clarification:
             narrower = [candidates[0]]
@@ -763,7 +764,7 @@ class Chatbot:
             narrower = [candidates[3]]
         if 'fifth' in clarification:
             narrower = [candidates[4]]
-                
+
         return narrower
 
     ############################################################################
