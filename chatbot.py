@@ -729,7 +729,6 @@ class Chatbot:
         :returns: a list of indices corresponding to the movies identified by
         the clarification
         """
-
         clarification = clarification.lower()
         single_digit = False
         
@@ -747,20 +746,23 @@ class Chatbot:
             if 0 < i <= len(candidates):
                 narrower = [candidates[i - 1]]
                 
-        if 'most recent' in clarification: # assume candidates in list can be distinguished by year
+        if 'most recent' in clarification or 'newest' in clarification: # assume candidates in list can be distinguished by year
             narrower = [max(candidates, key=lambda i: int(re.search(r'\(\d{4}\)', self.titles[i][0]).group()[1:-1]))]
             
-        if 'first' or 'second' or 'third' or 'fourth' or 'fifth' in clarification: # try ordinal index representation
-            if 'first' in clarification:
-                narrower = [candidates[0]]
-            if 'second' in clarification:
-                narrower = [candidates[1]]
-            if 'third' in clarification:
-                narrower = [candidates[2]]
-            if 'fourth' in clarification:
-                narrower = [candidates[3]]
-            if 'fifth' in clarification:
-                narrower = [candidates[4]]
+        if 'least recent' in clarification or 'oldest' in clarification: # assume candidates in list can be distinguished by year
+            narrower = [min(candidates, key=lambda i: int(re.search(r'\(\d{4}\)', self.titles[i][0]).group()[1:-1]))]
+        
+             # try ordinal index representation
+        if 'first' in clarification:
+            narrower = [candidates[0]]
+        if 'second' in clarification:
+            narrower = [candidates[1]]
+        if 'third' in clarification:
+            narrower = [candidates[2]]
+        if 'fourth' in clarification:
+            narrower = [candidates[3]]
+        if 'fifth' in clarification:
+            narrower = [candidates[4]]
                 
         return narrower
 
