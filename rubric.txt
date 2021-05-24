@@ -1,5 +1,5 @@
 #########################################################################################
-# TODO: Fill this template out in addition to the code implementation in chatbot.py!    #
+Fill this template out in addition to the code implementation in chatbot.py!    #
 #                                                                                       #
 # Each "Creative" feature in the rubric has a section below.                            #
 # For every feature you chose to implement, replace the "NO" at the end of the relevant #
@@ -8,46 +8,66 @@
 # You will only receive credit for the features you mark as YES below!                  #
 #########################################################################################
 
-FEATURE - Identifying movies without quotation marks and correct capitalization (part 1): NO
-FEATURE - Identifying movies without quotation marks and correct capitalization (part 2): NO
-FEATURE - Alternate/foreign titles: NO
-FEATURE - Disambiguation (part 1): NO
-FEATURE - Fine-grained sentiment extraction: NO
-FEATURE - Spell-correcting fallback for find_movies_by_title: NO
-FEATURE - Extracting sentiment with multiple-movie input: NO
-FEATURE - Disambiguation (part 2): NO
-FEATURE - Disambiguation (part 3): NO
+FEATURE - Identifying movies without quotation marks and correct capitalization (part 1): YES
+FEATURE - Identifying movies without quotation marks and correct capitalization (part 2): YES
+FEATURE - Alternate/foreign titles: YES
+FEATURE - Disambiguation (part 1): YES
+FEATURE - Fine-grained sentiment extraction: YES
+FEATURE - Spell-correcting fallback for find_movies_by_title: YES
+FEATURE - Extracting sentiment with multiple-movie input: YES
+FEATURE - Disambiguation (part 2): YES
+FEATURE - Disambiguation (part 3): YES
 FEATURE - Dialogue for spell-checking: NO
 FEATURE - Dialogue for disambiguation: NO
 FEATURE - Communicating sentiments and movies extracted to the user given multiple-movie input: NO
-FEATURE - Understanding references to things said previously: NO
-FEATURE - Responding to arbitrary input: NO
-FEATURE - Speaking very fluently: NO
-FEATURE - Identifying and responding to emotions: NO
+FEATURE - Responding to arbitrary input: YES
+FEATURE - Identifying and responding to emotions: YES
 Did not implement any of the above features: NO
 
 #########################################################################################
 # Team Contributions                                                                    #
 #########################################################################################
-TODO: Please write a short description of what each team member contributed!
+All team members contributed equally.
 
 
 #########################################################################################
 # Ethics Question                                                                  #
 #########################################################################################
-TODO: Please answer the following question:
 
-Humans are quick to anthropomorphize chatbots, like ELIZA. 
-In the 1960’s, users’ trust in ELIZA raised numerous concerns that humans would believe the system’s advice, 
-even if ELIZA did not actually know what it was talking about. Newer chatbots are built using neural networks, 
-like those you implemented in PA5. These neural networks are trained on enormous sets of data, from online 
-sources like Reddit and Twitter. These sources are interlaced with offensive text that are often reproduced 
-in chatbot responses. Furthermore, the newest advanced models, like GPT-3, have produced responses that appear 
+Humans are quick to anthropomorphize chatbots, like ELIZA.
+In the 1960’s, users’ trust in ELIZA raised numerous concerns that humans would believe the system’s advice,
+even if ELIZA did not actually know what it was talking about. Newer chatbots are built using neural networks,
+like those you implemented in PA5. These neural networks are trained on enormous sets of data, from online
+sources like Reddit and Twitter. These sources are interlaced with offensive text that are often reproduced
+in chatbot responses. Furthermore, the newest advanced models, like GPT-3, have produced responses that appear
 that they were written by a human.
 
-What are some possible ramifications of anthropomorphizing chatbot systems? Can you think of any ways that 
+What are some possible ramifications of anthropomorphizing chatbot systems? Can you think of any ways that
 engineers could ensure that users can easily distinguish the chatbot responses from those of a human?
 
+Anthropomorphizing chatbot systems is potentially dangerous in several ways. The first is an emotional
+component: users can actually develop a sentimental attachment to the technology, which can cause emotional
+distress when the technology is changed or taken away. It can also further stereotypes. A lot of virtual assistants
+have women's names and women's voices, furthering a dynamic in which women are seen as submissive and in-service
+to male counterparts. Finally, it can lead us to overestimate the capabilities of the system, or misattribute where
+information is coming from. Users can use these systems expecting to get information that is objective and free
+of biases, but the way that these bots are trained means that this is often far from the case. The chatbot isn't able to
+"think critically" in the way that humans are able to -- it is all algoirhtms that we can train and tweak but are going
+to be far from perfect.
+
+That being said, anthropomorphizing is often an excellent way of interacting with a user. It is less cold and can feel
+a lot more natural for users to interact with "Alexa", who they can speak to almost conversationally. The user experience
+would be really different if we instead had a device that we refered to as "Algorithm 342B" and who responded in a robotic voice
+with single words. However, there are small things we could do to alleviate the problem. For example, at the beginning of
+an interaction with an anthropomorphized system, there could be a message reminding the user that they are not speaking to
+a human. Similarly, when a response is outputed, the system should allow users to see how the response was generated (with
+an accessible description of sources and methodology). Finally, I think that these systems should also discourage forms of
+emotional attachment. When Siri hears the sentence, "I love you", the system responds with an equally loving phrase like,
+"You are the wind beneath my wings". This type of interaction is disingenuous and manipulative, and can be reduced through
+changes to the underlying algorithms.
+
+Overall, there are a lot of positive aspects about these systems and how they can help users in their daily lives. However,
+there are important implications to be wary of that we must continuously work to improve.
 
 
 #########################################################################################
