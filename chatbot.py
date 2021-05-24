@@ -715,7 +715,6 @@ class Chatbot:
             for root in emotions: # assumes only one emotion is present in response
                 for synonym in emotions[root]:
                     if synonym in found.group():
-                        print(sentiment)
                         if root in ('angry','sad') and sentiment != 1: # make sure sentiment doesn't conflict root
                             options = [f"Oh! Did I make you {root}? I aplogize.",
                                        f"Yikes! I may have caused you to become {root}. Please forgive me.",
