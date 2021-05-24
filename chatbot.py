@@ -235,7 +235,7 @@ class Chatbot:
             # user has said something about movies
             elif len(movie_names) > 0:
                 for movie_name in movie_names:
-                    movie_idxs = self.find_movies_closest_to_title(movie_name)
+                    movie_idxs = self.find_movies_by_title(movie_name)
                     # TODO: DISAMBIGUATION HERE to find correct movie_idx
                     # movie_idx = self.find_movies_by_title(movie_name)[0]
                     # sentiment = self.extract_sentiment(line)
@@ -252,7 +252,7 @@ class Chatbot:
             # user wants recs
             if root == 'done':
                 response = self.deliver_recs()
-            # user is asking a question
+            # user is responding to a question
             elif root in ['yes', 'no']:
                 if self.prev_q_data:
                     response = self.process_prev_q_response(root)
@@ -332,6 +332,7 @@ class Chatbot:
             else:
                 sentiment = -1
             response = self.add_rating(movie_idx, sentiment)
+            self.prev_q_data = None
         else:
             response = NOT_SURE
         return response
