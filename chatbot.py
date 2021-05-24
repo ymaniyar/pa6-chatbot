@@ -208,16 +208,22 @@ class Chatbot:
         ########################################################################
         line = self.preprocess(line)
         if self.creative:
+            # extracts type of user input, tense if necessary for chatbot response, 
+            # and content of input
             root, tense, content = self.parse_line(line)
             movie_names = self.extract_titles(line)
             print(root, tense, content)
+
+            # user wants recs
             if root and root == 'done':
                 response = self.deliver_recs()
+            # user is responding to a chatbot's question
             elif root and root in ['yes', 'no']:
                 if self.prev_q_data:
                     response = self.process_prev_q_response(root)
                 else:
                     response = NOT_SURE
+            # user is asking a question
             elif root and root in ['can', 'what']:
                 if root == 'can':
                     if tense == 'you':
@@ -226,6 +232,7 @@ class Chatbot:
                         response = f'{tense} might be able to {content} in the near future.'
                 elif root == 'what':
                     response = f'I am not exactly sure what {content} {tense}.' 
+            # user has said something about movies
             elif len(movie_names) > 0:
                 for movie_name in movie_names:
                     movie_idxs = self.find_movies_closest_to_title(movie_name)
@@ -233,24 +240,31 @@ class Chatbot:
                     # movie_idx = self.find_movies_by_title(movie_name)[0]
                     # sentiment = self.extract_sentiment(line)
                     # response = self.process_movie_rating(movie_idx, sentiment)
+            # catch all to respond to the emotion of user's input
             else:
                 response = self.identify_emotion(line)
         else:
+            # extracts type of user input, tense if necessary for chatbot response, 
+            # and content of input
             root, tense, content = self.parse_line(line)
             movie_names = self.extract_titles(line)
             print(root, tense, content)
+            # user wants recs
             if root == 'done':
                 response = self.deliver_recs()
+            # user is asking a question
             elif root in ['yes', 'no']:
                 if self.prev_q_data:
                     response = self.process_prev_q_response(root)
                 else:
                     response = NOT_SURE
+            # user has said something about movies
             elif len(movie_names) > 0:
                 movie_name = movie_names[0]
                 movie_idx = self.find_movies_by_title(movie_name)[0]
                 sentiment = self.extract_sentiment(line)
                 response = self.process_movie_rating(movie_idx, sentiment)
+            # catch all to respond to the emotion of user's input
             else:
                 response = self.identify_emotion(line)
 
@@ -261,7 +275,19 @@ class Chatbot:
         ########################################################################
         return response
     
+
     def process_movie_rating(self, movie_idx, sentiment):
+        """
+        Checks whether some sentiment has been expressed towards movie, 
+        adds rating if so, and if not, asks user whether they liked
+        or disliked the movie.
+
+        :param movie_idx: single index of movie
+        :param sentiment: rating towards movie at movie_idx
+        :returns: response 
+                either notes that rating has been added, 
+                clarification question otherwise
+        """
         formatted_movie_name = self.formatted_names['without_year'][movie_idx][0]
         if sentiment != 0:
             response = self.add_rating(movie_idx, sentiment)
@@ -272,6 +298,15 @@ class Chatbot:
         
 
     def deliver_recs(self):
+        """
+        Checks whether the user has supplied the necessary minimum of ratings, and
+        lists movie recommendations if so. Otherwise, reprompts user for more ratings.
+
+        :returns: response 
+            either notes that not enough ratings have been given, 
+            otherwise lists recs
+
+        """
         if self.ratings_counter < self.num_ratings_needed:
             response = f'Sorry, we need at least {self.num_ratings_needed} before we can give you recommendations! Tell me about a movie you have watched.'
         else:
@@ -283,6 +318,13 @@ class Chatbot:
         return response
 
     def process_prev_q_response(self, response):
+        """
+        Processes a user's response based on the type of question the chatbot asked.
+
+        :param response: some response to chatbot question (e.g. 'yes', 'no')
+        :returns: response 
+
+        """
         if self.prev_q_data['type'] == 'ask_if_liked':
             movie_idx = self.prev_q_data['movie_idx']
             if response == 'yes':
@@ -295,6 +337,17 @@ class Chatbot:
         return response
 
     def add_rating(self, movie_idx, sentiment):
+        """
+        Adds/updates rating matrix. If the movie has not already been rated, increments
+        self.ratings counter. Responds with confirmation.
+
+        :param movie_idx: single index of movie
+        :param sentiment: rating towards movie at movie_idx
+        :returns: response 
+                explicit confirm that rating has been recorded for given movie.
+
+        """
+        assert(sentiment != 0)
         formatted_movie_name = self.formatted_names['without_year'][movie_idx][0]
         if self.user_ratings[movie_idx] == 0:
             self.ratings_counter += 1
@@ -309,6 +362,15 @@ class Chatbot:
         return response
 
     def correct_tense(self, content):
+        """
+        Reformats 'content' of message to mirror it back to the user.
+        e.g. 'i am sad' --> 'you are sad'
+        e.g. 'tell me about some movies that you like' --> 'tell you about some movies that i like'
+
+        :param content: content of user input (excludes question words, ending punctuation)
+        :returns: content 
+
+        """
         content = re.sub(r'( me | me$|^me | i | i$|^i )', ' #you# ', content)
         content = re.sub(r'( am | am$|^am )', ' are ', content)
         content = re.sub(r'( you | you$|^you )', ' I ', content)
@@ -317,6 +379,18 @@ class Chatbot:
         return content
 
     def parse_line(self, line):
+        """
+        Parses line to extract the type of user input (response, question, movie rating, etc.),
+        accompanying information about the tense (first person, second person), and content of
+        message
+
+        :param content: content of user input (excludes question words, ending punctuation)
+        :returns: (root, tense, content) 
+            root: type of input ('yes', 'no', 'done', 'can_u', etc.)
+            tense: used if necessary for grammatically correct response
+            content: content of user input (excludes question words, ending punctuation)
+
+        """
         if line in self.yes:
             return ('yes', None, line)
         elif line in self.no:
