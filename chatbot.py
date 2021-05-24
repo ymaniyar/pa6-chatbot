@@ -602,13 +602,24 @@ class Chatbot:
         title, and the second is the sentiment in the text toward that movie
         """
         titles = self.extract_titles(preprocessed_input)
+        year = re.search('(\(\d{4}\))',titles[0])
+        if year:
+            title_first = self.formatted_names['with_year'][self.title_to_idx[titles[0]][0]][0]
+        else:
+            title_first = self.formatted_names['without_year'][self.title_to_idx[titles[0]][0]][0]
+        year = re.search('(\(\d{4}\))',titles[1])
+        if year:
+            title_second = self.formatted_names['with_year'][self.title_to_idx[titles[1]][0]][0]
+        else:
+            title_second = self.formatted_names['without_year'][self.title_to_idx[titles[1]][0]][0]
+
         descriptions = preprocessed_input.split(titles[0])
         sentiment_first = self.extract_sentiment(descriptions[0].lower())
         sentiment_second = self.extract_sentiment(descriptions[1].lower())
         if sentiment_second == 0:
             to_send = descriptions[1].lower() + descriptions[0].lower()
             sentiment_second = self.extract_sentiment(to_send)
-        return([(titles[0],sentiment_first),(titles[1],sentiment_second)])
+        return([(title_first,sentiment_first),(title_second,sentiment_second)])
 
     def find_movies_closest_to_title(self, title, max_distance=3):
         """Creative Feature: Given a potentially misspelled movie title,
