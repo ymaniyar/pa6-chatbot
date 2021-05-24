@@ -87,47 +87,47 @@ class Chatbot:
         self.negations = ['not',
                             'no',
                             'none',
-                            'nobody', 
-                            'nothing', 
-                            'neither', 
-                            'nowhere', 
-                            'never', 
-                            "won't", 
-                            "can't", 
-                            "didn't", 
-                            "couldn't", 
-                            "wouldn't", 
-                            "shouldn't", 
-                            "wont", 
-                            "cant", 
-                            "didnt", 
-                            "couldnt", 
-                            "wouldnt", 
+                            'nobody',
+                            'nothing',
+                            'neither',
+                            'nowhere',
+                            'never',
+                            "won't",
+                            "can't",
+                            "didn't",
+                            "couldn't",
+                            "wouldn't",
+                            "shouldn't",
+                            "wont",
+                            "cant",
+                            "didnt",
+                            "couldnt",
+                            "wouldnt",
                             "shouldnt"]
         self.articles = ['a','an','the']
-        self.yes = ['yes', 
-                    'yup', 
-                    'yeah', 
-                    'yea', 
-                    'yah', 
-                    'ya', 
-                    'sure', 
-                    'mhm', 
-                    'yurp', 
-                    'definitely', 
-                    'absolutely', 
+        self.yes = ['yes',
+                    'yup',
+                    'yeah',
+                    'yea',
+                    'yah',
+                    'ya',
+                    'sure',
+                    'mhm',
+                    'yurp',
+                    'definitely',
+                    'absolutely',
                     'i did',
                     'i do']
-        self.no = ['no', 
-                    'nope', 
-                    'not really', 
-                    'na', 
-                    'nah', 
-                    'i did not', 
+        self.no = ['no',
+                    'nope',
+                    'not really',
+                    'na',
+                    'nah',
+                    'i did not',
                     'i do not',
-                    'no way', 
-                    'definitely not', 
-                    'absolutely not', 
+                    'no way',
+                    'definitely not',
+                    'absolutely not',
                     "i didn't",
                     "i didnt"]
         # chatbot logistics
@@ -208,7 +208,7 @@ class Chatbot:
         ########################################################################
         line = self.preprocess(line)
         if self.creative:
-            # extracts type of user input, tense if necessary for chatbot response, 
+            # extracts type of user input, tense if necessary for chatbot response,
             # and content of input
             root, tense, content = self.parse_line(line)
             movie_names = self.extract_titles(line)
@@ -231,7 +231,13 @@ class Chatbot:
                     elif tense == 'I':
                         response = f'{tense} might be able to {content} in the near future.'
                 elif root == 'what':
-                    response = f'I am not exactly sure what {content} {tense}.' 
+                    response = f'I am not exactly sure what {content} {tense}.'
+
+            # user has mispelled movies
+            elif movie_names
+
+
+
             # user has said something about movies
             elif len(movie_names) > 0:
                 for movie_name in movie_names:
@@ -244,7 +250,7 @@ class Chatbot:
             else:
                 response = self.identify_emotion(line)
         else:
-            # extracts type of user input, tense if necessary for chatbot response, 
+            # extracts type of user input, tense if necessary for chatbot response,
             # and content of input
             root, tense, content = self.parse_line(line)
             movie_names = self.extract_titles(line)
@@ -268,24 +274,24 @@ class Chatbot:
             else:
                 response = self.identify_emotion(line)
 
-                    
+
 
         ########################################################################
         #                          END OF YOUR CODE                            #
         ########################################################################
         return response
-    
+
 
     def process_movie_rating(self, movie_idx, sentiment):
         """
-        Checks whether some sentiment has been expressed towards movie, 
+        Checks whether some sentiment has been expressed towards movie,
         adds rating if so, and if not, asks user whether they liked
         or disliked the movie.
 
         :param movie_idx: single index of movie
         :param sentiment: rating towards movie at movie_idx
-        :returns: response 
-                either notes that rating has been added, 
+        :returns: response
+                either notes that rating has been added,
                 clarification question otherwise
         """
         formatted_movie_name = self.formatted_names['without_year'][movie_idx][0]
@@ -295,15 +301,15 @@ class Chatbot:
             response = f"Did you like {formatted_movie_name}?"
             self.prev_q_data = {'type': 'ask_if_liked', 'movie_idx': movie_idx}
         return response
-        
+
 
     def deliver_recs(self):
         """
         Checks whether the user has supplied the necessary minimum of ratings, and
         lists movie recommendations if so. Otherwise, reprompts user for more ratings.
 
-        :returns: response 
-            either notes that not enough ratings have been given, 
+        :returns: response
+            either notes that not enough ratings have been given,
             otherwise lists recs
 
         """
@@ -322,7 +328,7 @@ class Chatbot:
         Processes a user's response based on the type of question the chatbot asked.
 
         :param response: some response to chatbot question (e.g. 'yes', 'no')
-        :returns: response 
+        :returns: response
 
         """
         if self.prev_q_data['type'] == 'ask_if_liked':
@@ -343,7 +349,7 @@ class Chatbot:
 
         :param movie_idx: single index of movie
         :param sentiment: rating towards movie at movie_idx
-        :returns: response 
+        :returns: response
                 explicit confirm that rating has been recorded for given movie.
 
         """
@@ -368,7 +374,7 @@ class Chatbot:
         e.g. 'tell me about some movies that you like' --> 'tell you about some movies that i like'
 
         :param content: content of user input (excludes question words, ending punctuation)
-        :returns: content 
+        :returns: content
 
         """
         content = re.sub(r'( me | me$|^me | i | i$|^i )', ' #you# ', content)
@@ -385,7 +391,7 @@ class Chatbot:
         message
 
         :param content: content of user input (excludes question words, ending punctuation)
-        :returns: (root, tense, content) 
+        :returns: (root, tense, content)
             root: type of input ('yes', 'no', 'done', 'can_u', etc.)
             tense: used if necessary for grammatically correct response
             content: content of user input (excludes question words, ending punctuation)
@@ -695,7 +701,7 @@ class Chatbot:
                                        f"Yay! I hope my movie recommendations make you {root} too.",
                                        f"Nice! I hope that you contine you to be {root}."]
                             response = random.choice(options)
-        return response       
+        return response
 
 
 
@@ -725,27 +731,27 @@ class Chatbot:
 
         clarification = clarification.lower()
         single_digit = False
-        
+
         if clarification.isdigit() and len(clarification) == 1: # minimize false positives -> search for installment
             clarification = ' ' + clarification + ' '
             single_digit = True
-            
+
         if clarification.startswith(('19', '20')) and len(clarification) == 4: # minimize false positives -> search for year
             clarification = '(' + clarification + ')'
-            
+
         narrower = [i for i in candidates if clarification in self.titles[i][0]]
-        
+
         if single_digit and len(narrower) == 0: # assumes digit is 1-index in list if installment search not successful
             i = int(clarification.strip())
             if 0 < i <= len(candidates):
                 narrower = [candidates[i - 1]]
-                
+
         if 'most recent' or 'newest' in clarification: # assume candidates in list can be distinguished by year
             narrower = [max(candidates, key=lambda i: int(re.search(r'\(\d{4}\)', self.titles[i][0]).group()[1:-1]))]
 
         if 'least recent' or 'oldest' in clarification:
             narrower = [min(candidates, key=lambda i: int(re.search(r'\(\d{4}\)', self.titles[i][0]).group()[1:-1]))]
-            
+
         if 'first' or 'second' or 'third' or 'fourth' or 'fifth' in clarification: # try ordinal index representation
             if 'first' in clarification:
                 narrower = [candidates[0]]
@@ -757,7 +763,7 @@ class Chatbot:
                 narrower = [candidates[3]]
             if 'fifth' in clarification:
                 narrower = [candidates[4]]
-                
+
         return narrower
 
     ############################################################################
