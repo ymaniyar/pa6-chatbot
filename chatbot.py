@@ -536,7 +536,7 @@ class Chatbot:
                 indices.extend(self.title_to_idx[match.lower()])
         return indices
 
-    def extract_sentiment(self, preprocessed_input, simple=True):
+    def extract_sentiment(self, preprocessed_input):
         # TODO: ADONIS
         """Extract a sentiment rating from a line of pre-processed text.
 
@@ -560,23 +560,38 @@ class Chatbot:
 
         num_words = len(preprocessed_input.split())
         stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
-
+        
+        extreme_positive = ['love','adore','great','amazing','fantastic','incredible','terrific']
+        extreme_positive = [self.p.stem(word) for word in extreme_positive]
+        extreme_negative = ['hate','terrible','horrible','disgusting','cringe','gross','suck']
+        extreme_negative = [self.p.stem(word) for word in extreme_negative]
+        
         scores = []
         multiplier = 1
         negation = 1
         for stem in stemmed_input:
-            # print(stem)
             base = self.sentiment[stem] if stem in self.sentiment else 0
+            if base != 0 and stem in extreme_positive:
+                base *= 2
+            if base != 0 and stem in extreme_negative:
+                base *= -2
             scores.append(base*multiplier*negation)
             multiplier = 1
             if stem in [self.p.stem('very'), self.p.stem('really')]:
                 multiplier = 2 # increase score of following word
             if stem in self.negations:
                 negation *= -1
-        if sum(scores) > 0:
-            return 1
-        elif sum(scores) == 0:
+                
+        score = sum(scores)
+                
+        if self.creative and score > 1:
+            return 2
+        elif score > 0:
+            return 1 
+        elif score == 0:
             return 0
+        elif self.creative and score < -1:
+            return -2
         else:
             return -1
 
@@ -751,7 +766,7 @@ class Chatbot:
         if clarification.startswith(('19', '20')) and len(clarification) == 4: # minimize false positives -> search for year
             clarification = '(' + clarification + ')'
 
-        narrower = [i for i in candidates if clarification in self.titles[i][0]]
+        narrower = [i for i in candidates if clarification in self.titles[i][0].lower()]
 
         if single_digit and len(narrower) == 0: # assumes digit is 1-index in list if installment search not successful
             i = int(clarification.strip())
@@ -764,7 +779,7 @@ class Chatbot:
         if 'least recent' in clarification or 'oldest' in clarification: # assume candidates in list can be distinguished by year
             narrower = [min(candidates, key=lambda i: int(re.search(r'\(\d{4}\)', self.titles[i][0]).group()[1:-1]))]
 
-             # try ordinal index representation
+        # try ordinal index representation
         if 'first' in clarification:
             narrower = [candidates[0]]
         if 'second' in clarification:
@@ -775,6 +790,13 @@ class Chatbot:
             narrower = [candidates[3]]
         if 'fifth' in clarification:
             narrower = [candidates[4]]
+
+        if len(narrower) == 0: # try mispelling or extraneous words as last resort
+            base = set(clarification.split())
+            intersection_lengths = [len(base.intersection(set(self.titles[i][0].lower().split()))) for i in candidates]
+            total = len(base)
+            threshold = 0.7
+            narrower = [i for i, common in zip(candidates, intersection_lengths) if common/total > threshold]
 
         return narrower
 
