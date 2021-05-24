@@ -732,27 +732,24 @@ class Chatbot:
 
         clarification = clarification.lower()
         single_digit = False
-
+        
         if clarification.isdigit() and len(clarification) == 1: # minimize false positives -> search for installment
             clarification = ' ' + clarification + ' '
             single_digit = True
-
+            
         if clarification.startswith(('19', '20')) and len(clarification) == 4: # minimize false positives -> search for year
             clarification = '(' + clarification + ')'
-
+            
         narrower = [i for i in candidates if clarification in self.titles[i][0]]
-
+        
         if single_digit and len(narrower) == 0: # assumes digit is 1-index in list if installment search not successful
             i = int(clarification.strip())
             if 0 < i <= len(candidates):
                 narrower = [candidates[i - 1]]
-
-        if 'most recent' or 'newest' in clarification: # assume candidates in list can be distinguished by year
+                
+        if 'most recent' in clarification: # assume candidates in list can be distinguished by year
             narrower = [max(candidates, key=lambda i: int(re.search(r'\(\d{4}\)', self.titles[i][0]).group()[1:-1]))]
-
-        if 'least recent' or 'oldest' in clarification:
-            narrower = [min(candidates, key=lambda i: int(re.search(r'\(\d{4}\)', self.titles[i][0]).group()[1:-1]))]
-
+            
         if 'first' or 'second' or 'third' or 'fourth' or 'fifth' in clarification: # try ordinal index representation
             if 'first' in clarification:
                 narrower = [candidates[0]]
@@ -764,7 +761,7 @@ class Chatbot:
                 narrower = [candidates[3]]
             if 'fifth' in clarification:
                 narrower = [candidates[4]]
-
+                
         return narrower
 
     ############################################################################
