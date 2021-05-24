@@ -234,7 +234,7 @@ class Chatbot:
                     response = f'I am not exactly sure what {content} {tense}.'
 
             # user has mispelled movies
-            elif movie_names
+            
 
 
 
