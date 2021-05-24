@@ -504,7 +504,12 @@ class Chatbot:
         the clarification
         """
 
-        pass
+        clarification = clarification.lower()
+        if clarification.isdigit() and len(clarification) == 1: # minimize false positives -> search for installment
+            clarification = ' ' + clarification + ' '
+        if clarification.startswith(('19', '20')) and len(clarification) == 4: # minimize false positives -> search for year
+            clarification = '(' + clarification + ')'
+        return [i for i in candidates if clarification in self.titles[i][0]]
 
     ############################################################################
     # 3. Movie Recommendation helper functions                                 #
