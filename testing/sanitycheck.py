@@ -182,7 +182,8 @@ def test_extract_fine_sentiment():
     test_cases = [
         ('I loved "Zootopia"', 2),
         ('"Zootopia" was terrible.', -2),
-        ('I really reeally liked "Zootopia"!!!', 2)
+        ('I really reeally liked "Zootopia"!!!', 2),
+        ('I verrry much disliked "Zootopia"', -2)
     ]
 
     tests_passed = True

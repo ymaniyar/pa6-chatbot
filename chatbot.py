@@ -556,10 +556,7 @@ class Chatbot:
         :param preprocessed_input: a user-supplied line of text that has been
         pre-processed with preprocess()
         :returns: a numerical value for the sentiment of the text
-        """
-
-        # num_words = len(preprocessed_input.split())
-        
+        """        
         
         titles = self.extract_titles(preprocessed_input)
         for title in titles:
@@ -589,12 +586,12 @@ class Chatbot:
             rly = re.search(r'(r+e+a+l+)', stem)
             vry = re.search(r'(v+e+r+)', stem)
             if rly or vry:
-            # if stem in [self.p.stem('very'), self.p.stem('really')]:
                 multiplier = 2 # increase score of following word
             if stem in self.negations:
                 negation *= -1
 
         score = sum(scores)
+
 
         if self.creative and score > 1:
             return 2
@@ -640,7 +637,7 @@ class Chatbot:
         else:
             title_second = self.formatted_names['without_year'][self.title_to_idx[titles[1]][0]][0]
 
-        descriptions = preprocessed_input.split(titles[0])
+        descriptions = preprocessed_input.split("\""+titles[0]+"\"")
         sentiment_first = self.extract_sentiment(descriptions[0].lower())
         sentiment_second = self.extract_sentiment(descriptions[1].lower())
         if sentiment_second == 0:
