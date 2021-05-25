@@ -29,6 +29,7 @@ class Chatbot:
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         self.formatted_names = {'with_year': [], 'without_year':[]}
         self.titles_no_year = set()
+        self.titles_no_articles = set()
         self.title_to_idx = defaultdict(list)
         self.genres_map = defaultdict(list)
         for i, title in enumerate(self.titles):
@@ -61,22 +62,21 @@ class Chatbot:
                 if article:
                     art = article.group(1)
                     name = name.replace(art,"")
+                    self.titles_no_articles.add(name.lower())
                     name = art[2:] + " " + name
                 if not year:
                     year = ""
-                # new_title = [name.lower()+year,title[1].lower()]
-                # new_titles.append(new_title)
                 new_names.append(name)
                 name_with_year = name+year
                 new_names_with_year.append(name_with_year)
                 name = name.lower()
                 name_with_year = name_with_year.lower()
+                name = self.preprocess(name)
+                name_with_year = self.preprocess(name_with_year)
                 self.genres_map[name_with_year].append(title[1])
                 self.title_to_idx[name_with_year].append(i)
                 self.title_to_idx[name].append(i)
                 self.titles_no_year.add(name.lower())
-                # self.titles_no_year_set = set(self.titles_no_year)
-                # self.titles_no_year.append(re.split(r'( \(\d{4}\))',name.lower())[0])
             self.formatted_names['without_year'].append(new_names)
             self.formatted_names['with_year'].append(new_names_with_year)
 
@@ -92,12 +92,14 @@ class Chatbot:
                             'neither',
                             'nowhere',
                             'never',
+                            "don't",
                             "won't",
                             "can't",
                             "didn't",
                             "couldn't",
                             "wouldn't",
                             "shouldn't",
+                            "dont",
                             "wont",
                             "cant",
                             "didnt",
@@ -212,7 +214,6 @@ class Chatbot:
             # and content of input
             root, tense, content = self.parse_line(line)
             movie_names = self.extract_titles(line)
-            print(root, tense, content)
 
             # user wants recs
             if root and root == 'done':
@@ -232,20 +233,18 @@ class Chatbot:
                         response = f'{tense} might be able to {content} in the near future.'
                 elif root == 'what':
                     response = f'I am not exactly sure what {content} {tense}.'
-
-            # user has mispelled movies
-
-
-
-
             # user has said something about movies
-            elif len(movie_names) > 0:
-                for movie_name in movie_names:
-                    movie_idxs = self.find_movies_by_title(movie_name)
-                    # TODO: DISAMBIGUATION HERE to find correct movie_idx
-                    # movie_idx = self.find_movies_by_title(movie_name)[0]
-                    # sentiment = self.extract_sentiment(line)
-                    # response = self.process_movie_rating(movie_idx, sentiment)
+            elif movie_names and len(movie_names) > 0:
+                movie_name = movie_names[0]
+                movie_idx = self.find_movies_by_title(movie_name)[0]
+                sentiment = self.extract_sentiment(line)
+                response = self.process_movie_rating(movie_idx, sentiment)
+                # for movie_name in movie_names:
+                #     movie_idxs = self.find_movies_by_title(movie_name)
+                #     TODO: DISAMBIGUATION HERE to find correct movie_idx
+                #     movie_idx = self.find_movies_by_title(movie_name)[0]
+                #     sentiment = self.extract_sentiment(line)
+                #     response = self.process_movie_rating(movie_idx, sentiment)
             # catch all to respond to the emotion of user's input
             else:
                 response = self.identify_emotion(line)
@@ -254,7 +253,6 @@ class Chatbot:
             # and content of input
             root, tense, content = self.parse_line(line)
             movie_names = self.extract_titles(line)
-            print(root, tense, content)
             # user wants recs
             if root == 'done':
                 response = self.deliver_recs()
@@ -265,7 +263,7 @@ class Chatbot:
                 else:
                     response = NOT_SURE
             # user has said something about movies
-            elif len(movie_names) > 0:
+            elif movie_names and len(movie_names) > 0:
                 movie_name = movie_names[0]
                 movie_idx = self.find_movies_by_title(movie_name)[0]
                 sentiment = self.extract_sentiment(line)
@@ -355,7 +353,7 @@ class Chatbot:
 
         """
         assert(sentiment != 0)
-        formatted_movie_name = self.formatted_names['without_year'][movie_idx][0]
+        formatted_movie_name = self.formatted_names['with_year'][movie_idx][0]
         if self.user_ratings[movie_idx] == 0:
             self.ratings_counter += 1
         self.user_ratings[movie_idx] = sentiment
@@ -457,6 +455,7 @@ class Chatbot:
         #text = re.sub(r'[^\w\s]', '', text.lower());
         if self.creative:
             text = text.lower().strip()
+            text = re.sub(r'([\.\,\?\!\;\:\-]+)', '', text)
         else:
             text = text.strip()
         ########################################################################
@@ -466,7 +465,6 @@ class Chatbot:
         return text
 
     def extract_titles(self, preprocessed_input):
-        # SOFIA
         """
         Extract potential movie titles from a line of pre-processed text.
 
@@ -492,10 +490,17 @@ class Chatbot:
 
 
         ##Question mark makes expression lazy rather than greedy (stops as soon as it finds something).
-        matches=re.findall(r'\"(.+?)\"',preprocessed_input)
-        if len(matches) == 0 and self.creative:
-            matches = self.submovies_helper(preprocessed_input)
-        return matches
+        matches_double= re.findall(r'(?:^| )\"(.+?)\"(?: |$)',preprocessed_input)
+        matches_single = re.findall(r'(?:^| )\'(.+?)\'(?: |$)',preprocessed_input)
+        if len(matches_double) == 0 and len(matches_single) == 0 and self.creative:
+            i_am_statement = re.search(r'(?:^i am |^i\'m |^im |^i feel |^i dont |^i don\'t feel |i do not feel )', preprocessed_input)
+            if i_am_statement:
+                return []
+            return self.submovies_helper(preprocessed_input)
+        elif len(matches_double) > 0:
+            return matches_double
+        else:
+            return matches_single
 
     # Find all possible movies in line given by user
     def submovies_helper(self,line):
@@ -506,10 +511,16 @@ class Chatbot:
             for j in range(i+1,len(words)+1):
                 if base in self.titles_no_year:
                     matches.append(base)
-                elif base[:len(base)-1] in self.titles_no_year:
-                    matches.append(base[:len(base)-1])
                 if j < len(words):
                     base = base + " " + words[j]
+        if len(matches) == 0:
+            for i in range(len(words)):
+                base = words[i]
+                for j in range(i+1,len(words)+1):
+                    if base in self.titles_no_articles:
+                        matches.append(base)
+                    if j < len(words):
+                        base = base + " " + words[j]
         return matches
 
 
@@ -525,7 +536,6 @@ class Chatbot:
         return matches
 
     def find_movies_by_title(self, title):
-        # SOFIA
         title = title.lower()
         year = re.search('(\(\d{4}\))',title)
         indices = self.title_to_idx[title]
@@ -534,10 +544,10 @@ class Chatbot:
             indices = []
             for match in matches:
                 indices.extend(self.title_to_idx[match.lower()])
+        indices.sort(key=lambda x: self.min_edit_distance(self.formatted_names['with_year'][x][0], title, 100))
         return indices
 
     def extract_sentiment(self, preprocessed_input):
-        # TODO: ADONIS
         """Extract a sentiment rating from a line of pre-processed text.
 
         You should return -1 if the sentiment of the text is negative, 0 if the
@@ -557,14 +567,11 @@ class Chatbot:
         pre-processed with preprocess()
         :returns: a numerical value for the sentiment of the text
         """        
-        
         titles = self.extract_titles(preprocessed_input)
-        for title in titles:
-            preprocessed_input = preprocessed_input.replace("\""+title+"\"", "")
+        if titles:
+            for title in titles:
+                preprocessed_input = preprocessed_input.replace("\""+title+"\"", "")
         
-        punc = re.search(r'([\.\,\?\!\)\(\;\:\-)]+)', preprocessed_input)
-        if punc:
-            preprocessed_input = preprocessed_input.replace(punc.group(1), "")
 
         stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
 
@@ -585,11 +592,11 @@ class Chatbot:
                 multiplier = 1
             rly = re.search(r'(r+e+a+l+)', stem)
             vry = re.search(r'(v+e+r+)', stem)
-            if rly or vry:
+            too = re.search(r'(t+oo+)', stem)
+            if rly or vry or too:
                 multiplier = 2 # increase score of following word
             if stem in self.negations:
                 negation *= -1
-
         score = sum(scores)
 
 
@@ -700,7 +707,6 @@ class Chatbot:
 
 
     def identify_emotion(self, line):
-        # ADONIS
         # 'line' should only be passed to this function if movie info could not be extracted from it
         # 'line' should be all lowercase from pre-processing
         # synonyms are top results from thesaurus.com
@@ -718,25 +724,31 @@ class Chatbot:
         }
 
         response = "Sorry, I didn't catch that. Could you rephrase?"
-        found = re.search(r'(?:^i am | i am |^i\'m | i\'m |^im | im | im$)(?: |\w)+', line)
+        found = re.search(r'(?:^i am | i am |^i\'m | i\'m |^im | im |^i feel |^i dont |^i don\'t feel |^i do not feel )(?: |\w)+', line)
         if found:
             sentiment = self.extract_sentiment(found.group())
             for root in emotions: # assumes only one emotion is present in response
                 for synonym in emotions[root]:
                     if synonym in found.group():
-                        if root in ('angry','sad') and sentiment != 1: # make sure sentiment doesn't conflict root
+                        if root in ('angry','sad') and sentiment < 0: # make sure sentiment doesn't conflict root
                             options = [f"Oh! Did I make you {root}? I aplogize.",
                                        f"Yikes! I may have caused you to become {root}. Please forgive me.",
                                        f"You're {root}? I'm sorry to have made you feel that way.",
                                        f"I didn't mean to make you {root}. I hope you can forgive me."]
                             response = random.choice(options)
-                        elif root == 'happy' and sentiment != -1:
+                            return response
+                        elif root == 'happy' and sentiment > 0:
                             options = [f"Great! It's good to hear that you're {root}.",
                                        f"Glad you're feeling {root}!",
                                        f"Amazing! I'm {root} that you're {root} :)",
                                        f"Yay! I hope my movie recommendations make you {root} too.",
                                        f"Nice! I hope that you contine you to be {root}."]
                             response = random.choice(options)
+                            return response
+            if sentiment < 0:
+                response = "I am very sorry to hear that."
+            elif sentiment > 0:
+                response = "I am glad to hear that!"
         return response
 
 
@@ -878,7 +890,6 @@ class Chatbot:
         return similarity
 
     def recommend(self, user_ratings, ratings_matrix, k=10, creative=False):
-        # YASH
         """Generate a list of indices of movies to recommend using collaborative
          filtering.
 

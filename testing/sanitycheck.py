@@ -114,9 +114,9 @@ def test_binarize():
     print()
 
 
-def test_extract_titles():
+def test_extract_titles(creative=False):
     print("Testing extract_titles() functionality...")
-    chatbot = Chatbot(False)
+    chatbot = Chatbot(creative)
 
     # add more test cases here!!!
     test_cases = [
@@ -479,6 +479,7 @@ def main():
         test_similarity()
 
     if testing_creative or testing_all:
+        test_extract_titles(True)
         test_extract_fine_sentiment()
         test_find_movies_closest_to_title()
         test_extract_sentiment_for_movies()
