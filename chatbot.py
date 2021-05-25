@@ -571,10 +571,8 @@ class Chatbot:
         negation = 1
         for stem in stemmed_input:
             base = self.sentiment[stem] if stem in self.sentiment else 0
-            if base != 0 and stem in extreme_positive:
+            if base != 0 and (stem in extreme_positive) or (stem in extreme_negative):
                 base *= 2
-            if base != 0 and stem in extreme_negative:
-                base *= -2
             scores.append(base*multiplier*negation)
             multiplier = 1
             if stem in [self.p.stem('very'), self.p.stem('really')]:
