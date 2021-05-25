@@ -62,21 +62,21 @@ class Chatbot:
                 if article:
                     art = article.group(1)
                     name = name.replace(art,"")
-                    self.titles_no_articles.add(name.lower())
+                    self.titles_no_articles.add(self.preprocess(name.lower()))
                     name = art[2:] + " " + name
                 if not year:
                     year = ""
                 new_names.append(name)
                 name_with_year = name+year
                 new_names_with_year.append(name_with_year)
-                name = name.lower()
-                name_with_year = name_with_year.lower()
-                name = self.preprocess(name)
-                name_with_year = self.preprocess(name_with_year)
+                name = self.preprocess(name.lower())
+                name_with_year = self.preprocess(name_with_year.lower())
+                # name = self.preprocess(name)
+                # name_with_year = self.preprocess(name_with_year)
                 self.genres_map[name_with_year].append(title[1])
                 self.title_to_idx[name_with_year].append(i)
                 self.title_to_idx[name].append(i)
-                self.titles_no_year.add(name.lower())
+                self.titles_no_year.add(name)
             self.formatted_names['without_year'].append(new_names)
             self.formatted_names['with_year'].append(new_names_with_year)
 
@@ -541,7 +541,6 @@ class Chatbot:
         indices = self.title_to_idx[title]
         if self.creative:
             matches = self.submovies_helper_2(title)
-            indices = []
             for match in matches:
                 indices.extend(self.title_to_idx[match.lower()])
         indices.sort(key=lambda x: self.min_edit_distance(self.formatted_names['with_year'][x][0], title, 100))
