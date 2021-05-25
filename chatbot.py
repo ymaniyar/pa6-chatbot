@@ -560,18 +560,18 @@ class Chatbot:
 
         num_words = len(preprocessed_input.split())
         stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
-        
+
         extreme_positive = ['love','adore','great','amazing','fantastic','incredible','terrific']
         extreme_positive = [self.p.stem(word) for word in extreme_positive]
         extreme_negative = ['hate','terrible','horrible','disgusting','cringe','gross','suck']
         extreme_negative = [self.p.stem(word) for word in extreme_negative]
-        
+
         scores = []
         multiplier = 1
         negation = 1
         for stem in stemmed_input:
             base = self.sentiment[stem] if stem in self.sentiment else 0
-            if base != 0 and (stem in extreme_positive) or (stem in extreme_negative):
+            if base != 0 and (stem in extreme_positive or stem in extreme_negative):
                 base *= 2
             scores.append(base*multiplier*negation)
             multiplier = 1
@@ -579,13 +579,13 @@ class Chatbot:
                 multiplier = 2 # increase score of following word
             if stem in self.negations:
                 negation *= -1
-                
+
         score = sum(scores)
-                
+
         if self.creative and score > 1:
             return 2
         elif score > 0:
-            return 1 
+            return 1
         elif score == 0:
             return 0
         elif self.creative and score < -1:
