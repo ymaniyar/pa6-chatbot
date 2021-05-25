@@ -558,7 +558,17 @@ class Chatbot:
         :returns: a numerical value for the sentiment of the text
         """
 
-        num_words = len(preprocessed_input.split())
+        # num_words = len(preprocessed_input.split())
+        
+        
+        titles = self.extract_titles(preprocessed_input)
+        for title in titles:
+            preprocessed_input = preprocessed_input.replace("\""+title+"\"", "")
+        
+        punc = re.search(r'([\.\,\?\!\)\(\;\:\-)]+)', preprocessed_input)
+        if punc:
+            preprocessed_input = preprocessed_input.replace(punc.group(1), "")
+
         stemmed_input = [self.p.stem(word) for word in preprocessed_input.split()]
         
         extreme_positive = ['love','adore','great','amazing','fantastic','incredible','terrific']
@@ -571,17 +581,21 @@ class Chatbot:
         negation = 1
         for stem in stemmed_input:
             base = self.sentiment[stem] if stem in self.sentiment else 0
-            if base != 0 and (stem in extreme_positive) or (stem in extreme_negative):
+            if base != 0 and (stem in extreme_positive or stem in extreme_negative):
                 base *= 2
             scores.append(base*multiplier*negation)
-            multiplier = 1
-            if stem in [self.p.stem('very'), self.p.stem('really')]:
+            if base != 0:
+                multiplier = 1
+            rly = re.search(r'(r+e+a+l+)', stem)
+            vry = re.search(r'(v+e+r+)', stem)
+            if rly or vry:
+            # if stem in [self.p.stem('very'), self.p.stem('really')]:
                 multiplier = 2 # increase score of following word
             if stem in self.negations:
                 negation *= -1
                 
         score = sum(scores)
-                
+
         if self.creative and score > 1:
             return 2
         elif score > 0:

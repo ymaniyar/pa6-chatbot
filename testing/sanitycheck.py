@@ -63,6 +63,18 @@ def assert_sign_equals(givenValue, correctValue, failureMessage):
         print("Actual: {}".format(givenValue))
         return False
 
+def assert_equals(givenValue, correctValue, failureMessage):
+    try:
+        # if abs(givenValue) > 0:
+        #     givenValue = int(givenValue / abs(givenValue))
+        assert givenValue == correctValue
+        return True
+    except AssertionError:
+        print(failureMessage)
+        print("Expected: {}".format(correctValue))
+        print("Actual: {}".format(givenValue))
+        return False
+
 
 def test_similarity():
     print("Testing similarity() functionality...")
@@ -162,6 +174,30 @@ def test_find_movies_by_title():
         print('find_movies_by_title() sanity check passed!')
     print()
 
+def test_extract_fine_sentiment():
+    print("Testing test_extract_fine_sentiment() functionality...")
+    chatbot = Chatbot(True)
+
+    # add more test cases here!!!
+    test_cases = [
+        ('I loved "Zootopia"', 2),
+        ('"Zootopia" was terrible.', -2),
+        ('I really reeally liked "Zootopia"!!!', 2)
+    ]
+
+    tests_passed = True
+    for input_text, expected_output in test_cases:
+        if not assert_equals(
+                chatbot.extract_sentiment(chatbot.preprocess(input_text)),
+                expected_output,
+                "Incorrect output for extract_sentiment(chatbot.preprocess('"
+                "{}')).".format(
+                    input_text)
+        ):
+            tests_passed = False
+    if tests_passed:
+        print('test_extract_fine_sentiment() sanity check passed!')
+    print()
 
 def test_extract_sentiment():
     print("Testing extract_sentiment() functionality...")
@@ -177,7 +213,7 @@ def test_extract_sentiment():
         ('I really enjoyed "Titanic (1997)".', 1),
         ('"Titanic (1997)" started out terrible, but the ending was totally '
          'great and I loved it!', 1),
-        ('I loved "10 Things I Hate About You"', 1),
+        ('I loved "10 Things I Hate About You"', 1)
     ]
 
     tests_passed = True
@@ -373,6 +409,9 @@ def main():
     parser.add_argument('--extract-sentiment',
                         help='Tests only the extract_sentiment function',
                         action='store_true')
+    parser.add_argument('--extract-fine-sentiment',
+                        help='Tests only the extract_fine_sentiment function',
+                        action='store_true')
     parser.add_argument('--recommend', help='Tests only the recommend function',
                         action='store_true')
     parser.add_argument('--binarize', help='Tests only the binarize function',
@@ -402,6 +441,9 @@ def main():
         return
     if args.extract_sentiment:
         test_extract_sentiment()
+        return
+    if args.extract_fine_sentiment:
+        test_extract_fine_sentiment()
         return
     if args.recommend:
         test_recommend()
@@ -436,6 +478,7 @@ def main():
         test_similarity()
 
     if testing_creative or testing_all:
+        test_extract_fine_sentiment()
         test_find_movies_closest_to_title()
         test_extract_sentiment_for_movies()
         test_disambiguate()
